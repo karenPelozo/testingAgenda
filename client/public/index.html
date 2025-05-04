@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Agenda de Materias</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="background-image: url('img/banner_colorido.png'); background-size: cover; background-repeat: no-repeat; background-position: center center; ; background-attachment: fixed;">
+  
+  <div id="login-modal">
+    <div id="login-modal-content">
+      <h2>Inicio de sesión</h2>
+      <input type="text" id="username" placeholder="Usuario">
+      <input type="password" id="password" placeholder="Contraseña">
+      <button id="btnLogin" onclick="login()">Ingresar</button>
+    </div>
+  </div>
+  
+  <div class="header-container">
+    <h1>Agenda de Materias</h1>
+    <span id="btnInfo" onclick="showInfo()" title="Acerca de mí">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+      </svg>
+    </span>
+    
+  </div>
+  <button id="btnOpenForm"><img src="img/leyendo.png" alt="Logo" class="logo">Nuevo</button>
+  
+  <table id="materiasTable">
+    
+    <thead>
+      <tr>
+        <th>Materia</th>
+        <th>Año de Carrera</th>
+        <th>Año</th>
+        <th>Horario</th>
+        <th>Modalidad</th>
+        <th>Correlativas</th>
+        <th>Examen</th>
+        <th>Notas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  
+  <!-- Modal para el formulario de alta/edición -->
+  <div id="form-modal">
+    <div id="form-modal-content">
+      <h2 id="modal-title">Nuevo Registro</h2>
+      
+      <label for="materia">Materia:</label>
+      <input type="text" id="materia" placeholder="Nombre de la materia">
+      
+      <label for="anioDeCarrera">Año de Carrera:</label>
+      <input type="number" id="anioDeCarrera" placeholder="Año de Carrera">
+      
+      <label for="anio">Año:</label>
+      <input type="text" id="anio" placeholder="Año">
+      
+      <label for="modalidad">Modalidad:</label>
+      <select id="modalidad">
+        <option value="Presencial">Presencial</option>
+        <option value="Virtual">Virtual</option>
+        <option value="Híbrido">Híbrido</option>
+      </select>
+      
+      <label for="correlativas">Correlativas (separadas por coma):</label>
+      <input type="text" id="correlativas" placeholder="Ej: Matemática I, Física I">
+
+      <h3>Horario</h3>
+      <label for="dia">Día:</label>
+      <select id="dia">
+        <option value="Lunes">Lunes</option>
+        <option value="Martes">Martes</option>
+        <option value="Miércoles">Miércoles</option>
+        <option value="Jueves">Jueves</option>
+        <option value="Viernes">Viernes</option>
+        <option value="Sábado">Sábado</option>
+        <option value="Domingo">Domingo</option>
+      </select>
+      
+      <label for="horaInicio">Hora de Inicio:</label>
+      <input type="time" id="horaInicio">
+      
+      <label for="horaFin">Hora de Fin:</label>
+      <input type="time" id="horaFin">
+      
+      <label for="examen">Fecha de Examen (opcional):</label>
+      <input type="date" id="examen">
+      
+      <h3>Notas</h3>
+      <label for="notaParcial1">Nota Parcial 1:</label>
+      <input type="number" id="notaParcial1" placeholder="Nota Parcial 1">
+      
+      <label for="notaParcial2">Nota Parcial 2:</label>
+      <input type="number" id="notaParcial2" placeholder="Nota Parcial 2">
+      
+      <label for="notaFinal">Nota Final:</label>
+      <input type="number" id="notaFinal" placeholder="Nota Final">
+      
+      <div id="eventos-container">
+        <h3>Eventos</h3>
+      </div>
+      <button id="btnAgregarEvento" type="button">Agregar Evento</button>
+      
+      <div class="button-group">
+        <button id="btnGuardar">Guardar</button>
+        <button id="btnCancelar">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="details-modal">
+    <div id="details-modal-content">
+      <button class="close" onclick="closeDetailsModal()">×</button>
+      <h2>Detalles de la Materia</h2>
+      <div id="details-content"></div>
+    </div>
+  </div>
+  
+  <script src="js/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+
+<footer>
+  <div>
+    <img src="https://edunpaz.unpaz.edu.ar/OMP/public/site/images/userbiblio/unpaz_horizontal-transparente_(400X139px).png" 
+         alt="UNPAZ Logo">
+  </div>
+  <p>Trabajo de Campo 2025</p>
+</footer>
+</html>

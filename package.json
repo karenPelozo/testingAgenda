@@ -1,0 +1,32 @@
+{
+  "name": "agendaestudiantes",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "agendaestudiantes": "file:",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "sequelize-cli": "^6.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omarbrondo/AgendaEstudiantesv3.git"
+  },
+  "bugs": {
+    "url": "https://github.com/omarbrondo/AgendaEstudiantesv3/issues"
+  },
+  "homepage": "https://github.com/omarbrondo/AgendaEstudiantesv3#readme",
+  "description": ""
+}
