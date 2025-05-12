@@ -7,14 +7,16 @@
 </head>
 <body style="background-image: url('img/banner_colorido.png'); background-size: cover; background-repeat: no-repeat; background-position: center center; ; background-attachment: fixed;">
   
-  <div id="login-modal">
+<div id="login-modal">
+  <form id="login-form" onsubmit="login(); return false;">
     <div id="login-modal-content">
       <h2>Inicio de sesión</h2>
       <input type="text" id="username" placeholder="Usuario">
       <input type="password" id="password" placeholder="Contraseña">
-      <button id="btnLogin" onclick="login()">Ingresar</button>
+      <button type="submit" id="btnLogin">Ingresar</button>
     </div>
-  </div>
+  </form>
+</div>
   
   <div class="header-container">
     <h1>Agenda de Materias</h1>
@@ -25,8 +27,12 @@
     </span>
     
   </div>
-  <button id="btnOpenForm"><img src="img/leyendo.png" alt="Logo" class="logo">Nuevo</button>
   
+  <!-- <button id="btnOpenForm"><img src="img/leyendo.png" alt="Logo" class="logo">Nuevo</button>
+    <div class="icon-wrapper"> -->
+
+  <img src="img/leyendo.png" alt="Logo" class="icon-left">
+  </div>
   <table id="materiasTable">
     
     <thead>
@@ -44,6 +50,10 @@
     </thead>
     <tbody></tbody>
   </table>
+
+  <div class="button-wrapper">
+  <button id="btnOpenForm">Nuevo</button>
+</div>
   
   <!-- Modal para el formulario de alta/edición -->
   <div id="form-modal">

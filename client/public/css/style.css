@@ -1,5 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Playwrite+MX+Guides&display=swap');
 
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+}
 
 #login-modal {
   position: fixed;
@@ -7,28 +17,46 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: #000; /* Fondo completamente opaco */
+  background: url('../img/banner_colorido.png') no-repeat center center;
+  background-size: cover;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000; /* Por encima de otros elementos */
+  z-index: 1000;
+}
+
+#login-modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  z-index: -1;
 }
 
 
 
 #login-modal-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 5px;
-  width: 300px;
+  background: linear-gradient(135deg, #dac7f8, #b78ef1, #ffaa00);
+  padding: 25px;
+  border-radius: 15px;
+  width: 320px;
   text-align: center;
+  margin: 0 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-family: 'Roboto', Arial, sans-serif;
 }
 
 #login-modal-content input {
   width: 100%;
-  margin: 5px 0;
-  padding: 8px;
+  margin: 10px 0;
+  padding: 10px;
   font-size: 14px;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -56,19 +84,26 @@ body {
 }
 
 .header-container {
-  position: relative; 
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center; 
-  padding: 15px;
+  justify-content: center;
+  padding: 15px 50px; /* espacio lateral para #btnInfo */
   background: linear-gradient(90deg, #b78ef1, #ffaa00);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 #btnInfo {
-  position: absolute; 
-  right: 15px;       
-  cursor: pointer;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 30px;
+  width: 30px;
+  height: 30px;
+  overflow: hidden;
 }
 
 .header-container .logo {
@@ -90,30 +125,37 @@ body {
   cursor: pointer;
 }
 
+.icon-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  margin: 20px 0 10px 0;
+}
+
+.icon-left {
+  width: 98px;
+  height: 98px;
+  margin-left: 50px;
+}
+
+.button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-right: 70px;
+}
+
 #btnOpenForm {
-  align-self: flex-start;      
-  display: inline-block;       
-  margin: 20px 20px 20px 20px;  
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  background: #b78ef1;
-  color: #fff;
+  padding: 10px 20px;
+  background-color: #b78ef1;
+  color: white;
   border: none;
-  border-radius: 30px;
+  border-radius: 6px;
+  font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background-color 0.3s;
 }
 
 #btnOpenForm:hover {
-  background: #ffaa00;
-}
-
-.logo {
-  width: 65px;
-  height: 65px;
-  vertical-align: middle;
-  margin-right: 8px;
+  background-color: #ffaa00;
 }
 
 
@@ -145,6 +187,7 @@ td {
   text-align: center;
   font-size: 14px;
   color: #555;
+  word-break: break-word;
 }
 
 button {
