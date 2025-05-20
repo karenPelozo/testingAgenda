@@ -14,6 +14,13 @@ npm install --save-dev nodemon
 
 npm install cors
 
+## instalamos bcrypt
+
+npm install bcrypt
+## instalamos joi
+
+npm i joi
+
 ## Ejecutamos el servidor
 npm run dev
 

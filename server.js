@@ -6,18 +6,25 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Importa la conexión de Sequelize y el modelo de Usuario
-const sequelize = require('./client/Data/db')
-const User = require('./client/src/server/routes/User');
+//const sequelize = require('./client/Data/db')
+const db = require('./server/src/db/models');
+const { User, Materia, Correlativa ,MateriaUser,Evento,Modalidad,TipoEvento,sequelize} = db;
 
-let materias = require('./client/Data/materias.json'); // Comentar esto para no trabajar con un json local, le pusimos let y no const para que permita eliminar
+const routerMateria = require('./server/src/routes/MateriaRoutes');
+const routerUser= require('./server/src/routes/UserRoutes')
+//const { alter } = require("./client/src/server/schemas/schemaMateria");
+//let materias = require('./client/Data/materias.json'); // Comentar esto para no trabajar con un json local, le pusimos let y no const para que permita eliminar
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.static(path.join(__dirname, "client", "public")));
 
 // Ruta raíz: envía el index.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "client", "public", "index.html"));
+  res.sendFile(path.join(__dirname, "client", "public", "js/index.html"));
 });
 
 
@@ -28,13 +35,17 @@ app.get("/", (req, res) => {
 
 app.use(express.static(path.join(__dirname, "client", "public")));
 
-
-app.get("/", (req, res) => {
+app.use('/materias',routerMateria);
+console.log('RoutesMateria',routerMateria )
+console.log('Tipo de routerUser:', typeof routerUser);
+app.use('/user', routerUser)
+/*app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "public", "index.html"));
 });
+ */
 
 
-app.get("/materias", (req, res) => {
+/*app.get("/materias", (req, res) => {
 
   res.json(materias);
 });
@@ -90,10 +101,10 @@ app.delete("/materias/:id", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
+   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
 
-
+*/
 app.post("/login", async (req, res) => {
   try {
     const { nombre, password } = req.body;
@@ -124,7 +135,7 @@ app.post("/login", async (req, res) => {
 ============================================*/
 
 // Registrar un usuario
-app.post("/register", async (req, res) => {
+/*app.post("/register", async (req, res) => {
   try {
     const { nombre, password, rol } = req.body;
     if (!nombre || !password || !rol) {
@@ -146,22 +157,24 @@ app.post("/register", async (req, res) => {
       password: hashedPassword,
       rol,
     });
-
+    
     res.status(201).json({ message: "Usuario registrado", user: newUser });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
-
+*/
 /*===========================================
   Sincronización de la Base de Datos y Arranque del Servidor
 ============================================*/
-
-sequelize.sync()
+sequelize.authenticate().then(()=>{
+    console.log('CONEXION EXITOSA')
+  })
+  
+db.sequelize.sync({alter :true})//alter :true
   .then(() => {
     console.log("Base de datos y tablas creadas correctamente.");
-    app.listen(port, () => console.log(`Servidor corriendo en http://localhost:${port}`));
+      app.listen(port, () => console.log(`Servidor corriendo en http://localhost:${port}`));
   })
   .catch((error) => {
     console.error("Error al sincronizar la base de datos:", error);

@@ -4,8 +4,10 @@ import "../styles/App.css";//app.css
 
 function App() {
   const [materias, setMaterias] = useState([]);
-  const [form, setForm] = useState({ nombre: "", horario: "", examen: "" });
-  
+  const [form, setForm] = useState({ nombre: "", horario: "", examen: "", anioDeCarrera: 1,
+  anio: new Date().getFullYear(),
+  idmodalidad: 1 });
+ 
   // Cargar las materias desde el backend
   useEffect(() => {
     fetch("http://localhost:3000/materias")
@@ -22,23 +24,24 @@ function App() {
   // Agregar una nueva materia
   const addMateria = () => {
     // Se construye el objeto según el JSON esperado. Se asignan valores por defecto a otros campos.
+    console.log("FUNCION ADDMATERIA FUNCIONA");
     const newMateria = {
-      nombre: form.nombre,
+      namemateria: form.nombre,
+      anioDeCarrera: form.anioDeCarrera, // valor predeterminado
+      anio:form.anio,
       horario: form.horario,
-      anioDeCarrera: 1, // valor predeterminado
-      anio: new Date().getFullYear().toString(),
-      modalidad: "Presencial",
+      idmodalidad: form.idmodalidad,
       correlativas: [],
       notas: {},
       eventos: [
-        {
-          tipo: "Parcial",
-          numero: 1,
-          temasAEstudiar: "",
-          estado: "Pendiente",
-          fechaEntrega: form.examen
-        }
-      ]
+      {
+         tipo: "Parcial",
+         numero: 1,
+         temasAEstudiar: "",
+         estado: "Pendiente",
+         fechaEntrega: form.examen
+       }
+            ]
     };
     
     fetch("http://localhost:3000/materias", {
@@ -51,9 +54,19 @@ function App() {
       .then(response => response.json())
       .then(data => {
         setMaterias([...materias, data]);
-        setForm({ nombre: "", horario: "", examen: "" });
+        setForm({ nombre: "", horario: "", examen: "", anioDeCarrera: 1, anio: new Date().getFullYear(), idmodalidad: 1  });
       })
       .catch(error => console.error("Error al agregar materia:", error));
+
+ fetch('http://localhost:3000/login', {
+           method: 'POST',
+           headers: {
+                'Content-Type': 'application/json',
+                       },
+           credentials: 'include',
+            body: JSON.stringify({ email, password }),
+})
+
   };
 
   // Eliminar una materia
@@ -88,7 +101,7 @@ function App() {
       <h1>Agenda de Materias</h1>
       <div className="formulario">
         <input
-          name="nombre"
+          name="namemateria"
           placeholder="Materia"
           value={form.nombre}
           onChange={handleInputChange}
@@ -123,7 +136,7 @@ function App() {
           <tbody>
             {materias.map(materia => (
               <tr key={materia.id}>
-                <td>{materia.nombre}</td>
+                <td>{materia.namemateria}</td>
                 <td>{extractDia(materia.horario)}</td>
                 <td>{extractHora(materia.horario)}</td>
                 <td>{getExamenDate(materia.eventos)}</td>

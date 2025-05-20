@@ -1,6 +1,5 @@
 //test comentario Omar Brondo
 let editingMateriaId = null;
-
 document.addEventListener("DOMContentLoaded", () => {
   loadMaterias();
 
@@ -193,14 +192,16 @@ function saveMateria() {
   const materiaData = getMateriaFromForm();
 
   if (!editingMateriaId) {
-    // Creación de una nueva materia (POST)
+    // Creaión de una nueva materia (POST)
     fetch("/materias", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(materiaData),
+      
     })
       .then((response) => response.json())
       .then(() => {
+        console.log(materiaData.JSON);
         loadMaterias();
         closeFormModal();
       })
@@ -214,6 +215,7 @@ function saveMateria() {
     })
       .then((response) => response.json())
       .then(() => {
+        console.log(materiaData.JSON);
         loadMaterias();
         closeFormModal();
         editingMateriaId = null;
@@ -379,12 +381,14 @@ function showInfo() {
 }*/
 
 function login() {
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+  const username = document.getElementById("nameuser").value;
+  const password = document.getElementById("passworduser").value;
   
   fetch("/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" 
+
+    },
     // Enviamos las credenciales; observa que el nombre del campo es "nombre", ya que en el modelo se llama así.
     body: JSON.stringify({ nombre: username, password: password })
   })
