@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt')
 const db = require('../db/models');
 const User = db.User;
 
@@ -80,12 +81,13 @@ const logUser = async (req, res)=>{
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
     req.session.usuario = usuario
-    res.cookie('token', token, {
+    /*res.cookie('token', token, {
           httpOnly: true,
           secure: false,
           sameSite: 'Lax'
             });
-    res.json({ message: "Login exitoso", usuario: { id: usuario.id, nombre: usuario.nameuser, rol: usuario.roluser } });
+    */
+   res.json({ message: "Login exitoso", usuario: { id: usuario.id, nombre: usuario.nameuser, rol: usuario.roluser } });
     }
     }catch(error){
         console.error('Error en login:', error);
