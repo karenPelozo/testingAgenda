@@ -17,14 +17,14 @@ const routerUser= require('./server/src/routes/UserRoutes')
 
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: `http://localhost:${PORT}`,
   credentials: true
 }));
 app.use(express.static(path.join(__dirname, "client", "public")));
 
 // Ruta raíz: envía el index.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "client", "public", "js/index.html"));
+  res.sendFile(path.join(__dirname, "client", "public", "index.html"));
 });
 
 

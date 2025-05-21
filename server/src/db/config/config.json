@@ -3,8 +3,8 @@
     "username": "root",
     "password": null,
     "database": "database_development",
-    "storage":"../../../Data/database.sqlite",
-    "host": "Data/database.sqlite",
+    "storage":"./server/Data/database.sqlite",
+    "host": "./server/Data/database.sqlite",
     "dialect": "sqlite"
   },
   "test": {

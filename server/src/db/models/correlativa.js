@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
     idMateriaCorrelativa: {
       type:DataTypes.INTEGER,
        // preguntar si debo de referenciar a models.Materia references:{  model: 'Materia', key: 'id' } y como lo puedo hacer aca
-       
+       references:{  model: 'Materia', key: 'id' }
       }
   }, {
     sequelize,

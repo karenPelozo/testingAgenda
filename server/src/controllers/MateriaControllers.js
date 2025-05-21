@@ -5,15 +5,17 @@ const controllerMateria ={}
 //LISTAR TODAS LAS MATERIAS
 const getMaterias = async (req,res)=>{
    const materias = await Materia.findAll({});
-   res.status(200).json(materias)
+   res.send(JSON.stringify(materias)).status(200)
+//   res.status(200).json(materias)
 }
 controllerMateria.getMaterias = getMaterias;
 //MOSTRAR SOLO UNA MATERIA POR ID
 const getByIdMaterias = async (req,res)=>{
     const id = req.params.id
      try{
-      const materia = await Materia.findByPk(id)
-      res.status(200).json(materia)
+      const materia = await Materia.findByPk(id);
+     res.send(JSON.stringify(materia)).status(200)
+     //  res.status(200).json(materia)
     }catch(error){
         res.status(404).json({mensaje:'ERROR AL ENCONTRAR MATERIA'})
     }   
@@ -33,23 +35,25 @@ const deleteMateria = async (req,res)=>{
 controllerMateria.deleteMateria = deleteMateria;
 //ELIMINAR TODAS LAS MATERIAS
 const deleteAll = async (req, res)=>{
-    const data = await Materia.destroy({where: {}});
+    await Materia.destroy({where: {}});
     //res.status(QUE NUM HIRIA).json({mensaje: 'ELINACION DE TODAS LAS MATERIAS CORRECTAMENTE'})
 }
 controllerMateria.deleteAll = deleteAll;
 //CREAR UNA MATERIA
 const createMateria = async (req, res)=>{
-    try{
+    try{const idModalidad = 0;
         console.log("BODY RECIBIDO:", req.body);
-        const { namemateria, anioDeCarrera, anio, horario, idmodalidad } = req.body;
+        const { namemateria, anioDeCarrera, anio, horario, modalidad , evento } = req.body;
         const materianueva = await Materia.create({
               namemateria,
               anioDeCarrera,
               anio,
               horario,
-              idmodalidad
-    })
-        res.status(201).json(materianueva);
+              idModalidad ,//aca debo de buscar el id de la modalidad, = modalidad funcion comparar(modalidad) return id
+              idEvento // debo de buscar el id del evento o la materia no dejara guardar, puede llegara ser a null por se una foreinkey
+            })
+        res.send(JSON.stringify(materianueva)).status(201)
+        //res.status(201).json(materianueva);
     }catch(error){
         res.status(404).json({mensaje:'ERROR AL INGRESAR LA MATERIA'})
     }   
