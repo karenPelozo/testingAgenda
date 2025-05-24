@@ -2,14 +2,21 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
+
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Importa la conexión de Sequelize y el modelo de Usuario
-const sequelize = require('./client/Data/db')
-const User = require('./client/src/server/routes/User');
+const sequelize = require('./client/Data/db');
+const User = require('./client/models/User');
+const Materia = require('./client/models/Materia');
+const Evento = require('./client/models/Evento');
 
-let materias = require('./client/Data/materias.json'); // Comentar esto para no trabajar con un json local, le pusimos let y no const para que permita eliminar
+
+//let materias = require('./client/Data/materias.json'); 
+// Si deseas trabajar con una base en blanco, comenta la línea anterior y usa:
+let materias = [];
 
 app.use(express.json());
 app.use(cors());
@@ -20,25 +27,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "public", "index.html"));
 });
 
-
-//let materias = []; 
-/*activar este array y eliminar o comentar const materias =
- require('./client/Data/materias.json') para trabajar con una base en blanco*/
-
-
-app.use(express.static(path.join(__dirname, "client", "public")));
-
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "client", "public", "index.html"));
-});
-
+// Endpoints para Materias
 
 app.get("/materias", (req, res) => {
-
   res.json(materias);
 });
-
 
 app.get("/materias/:id", (req, res) => {
   const id = parseInt(req.params.id);
@@ -50,12 +43,9 @@ app.get("/materias/:id", (req, res) => {
   }
 });
 
-
 app.post("/materias", (req, res) => {
   if (Array.isArray(req.body)) {
-    const nuevasMaterias = req.body.map((m, index) => {
-      return { ...m, id: Date.now() + index };
-    });
+    const nuevasMaterias = req.body.map((m, index) => ({ ...m, id: Date.now() + index }));
     materias = materias.concat(nuevasMaterias);
     res.status(201).json(nuevasMaterias);
   } else {
@@ -64,7 +54,6 @@ app.post("/materias", (req, res) => {
     res.status(201).json(nuevaMateria);
   }
 });
-
 
 app.put("/materias/:id", (req, res) => {
   const id = parseInt(req.params.id);
@@ -77,7 +66,6 @@ app.put("/materias/:id", (req, res) => {
   }
 });
 
-
 app.delete("/materias/:id", (req, res) => {
   const id = parseInt(req.params.id);
   const prevLength = materias.length;
@@ -89,11 +77,7 @@ app.delete("/materias/:id", (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
-});
-
-
+// Endpoint para Login
 app.post("/login", async (req, res) => {
   try {
     const { nombre, password } = req.body;
@@ -111,19 +95,13 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
-    // En este ejemplo, devolvemos la información básica del usuario (sin datos sensibles)
     res.json({ message: "Login exitoso", user: { id: user.id, nombre: user.nombre, rol: user.rol } });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-
-/*===========================================
-  Endpoints para Registro y Login de Usuarios
-============================================*/
-
-// Registrar un usuario
+// Endpoint para Registrar un Usuario
 app.post("/register", async (req, res) => {
   try {
     const { nombre, password, rol } = req.body;
@@ -153,11 +131,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-
-/*===========================================
-  Sincronización de la Base de Datos y Arranque del Servidor
-============================================*/
-
+// Sincronización de la base de datos y arranque del servidor  
 sequelize.sync()
   .then(() => {
     console.log("Base de datos y tablas creadas correctamente.");
