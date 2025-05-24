@@ -135,7 +135,7 @@ app.post("/db/materia", async (req, res) => {
 });
 
 // Obtener todas las materias de un usuario (filtrando por userId)
-app.get("/db/materias", async (req, res) => {
+/*app.get("/db/materias", async (req, res) => {
   try {
     const userId = req.query.userId;
     if (!userId) {
@@ -149,7 +149,7 @@ app.get("/db/materias", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+});*/
 
 // Obtener una materia por ID (incluyendo sus eventos)
 app.get("/db/materia/:id", async (req, res) => {
