@@ -29,7 +29,7 @@ const Materia = sequelize.define('Materia', {
     allowNull: true,
   },
   correlativas: {
-    type: DataTypes.JSON, // Se almacenará como JSON (SQLite lo guardará como TEXT)
+    type: DataTypes.JSON,
     allowNull: true,
   },
   notaParcial1: {
@@ -44,7 +44,10 @@ const Materia = sequelize.define('Materia', {
     type: DataTypes.FLOAT,
     allowNull: true,
   },
-  // La clave foránea 'userId' se agregará mediante la asociación
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  }
 }, {
   tableName: 'materias',
   timestamps: false,
