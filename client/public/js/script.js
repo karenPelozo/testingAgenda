@@ -1,11 +1,13 @@
 // test comentario Omar Brondo
 
-// Variable global para almacenar el ID del usuario logueado
 let loggedUserId = null;
-let editingMateriaId = null;
+let editingInscripcionId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Intenta cargar materias solo si el usuario ya está logueado
+  // Al cargar el DOM, intenta poblar el select de materias globales
+  populateMateriasSelect();
+
+  // Si el usuario ya se logueó, carga sus inscripciones
   if (loggedUserId) {
     loadMaterias();
   }
@@ -21,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnCancelar.addEventListener("click", () => {
     closeFormModal();
-    editingMateriaId = null;
+    editingInscripcionId = null;
   });
 
   btnGuardar.addEventListener("click", () => {
@@ -33,14 +35,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function populateMateriasSelect() {
+  // Obtiene la lista de materias globales para rellenar el select
+  fetch("/db/materias/global")
+    .then(res => res.json())
+    .then(data => {
+      const select = document.getElementById("NombreMateria");
+      // Limpiamos el select
+      select.innerHTML = `<option value="">-- Seleccione una Materia --</option>`;
+      data.forEach(materia => {
+        const option = document.createElement("option");
+        option.value = materia.NombreMateria; // Usamos el nombre como valor; si necesitas el id, podrías usar materia.idMateria
+        option.text = materia.NombreMateria;
+        select.appendChild(option);
+      });
+    })
+    .catch(err => console.error("Error al cargar materias globales:", err));
+}
+
 function loadMaterias() {
   if (!loggedUserId) {
     console.error("El ID del usuario no está definido.");
     return;
   }
-
-  // Se consulta el endpoint con el parámetro userId obtenido de la variable global
-  fetch(`/db/materias?userId=${loggedUserId}`)
+  // Consulta las inscripciones (materias que tiene el usuario) de la base de datos
+  fetch(`/db/materias?idUsuario=${loggedUserId}`)
     .then((res) => res.json())
     .then((data) => {
       renderMaterias(data);
@@ -48,7 +67,7 @@ function loadMaterias() {
     .catch((err) => console.error(err));
 }
 
-function renderMaterias(materias) {
+function renderMaterias(inscripciones) {
   const table = document.getElementById("materiasTable");
   let tbody = table.querySelector("tbody");
   if (!tbody) {
@@ -57,57 +76,28 @@ function renderMaterias(materias) {
   }
   tbody.innerHTML = "";
 
-  materias.forEach((materia) => {
-    const nombre = materia.nombre || "N/A";
-    const anioDeCarrera =
-      materia.anioDeCarrera !== undefined && materia.anioDeCarrera !== null
-        ? materia.anioDeCarrera
-        : "N/A";
-    const anio = materia.anio || "N/A";
-    const horario = materia.horario || "N/A";
-    const modalidad = materia.modalidad || "N/A";
-    const correlativas =
-      Array.isArray(materia.correlativas) && materia.correlativas.length > 0
-        ? materia.correlativas.join(", ")
-        : "N/A";
-    const examenFecha = materia.examen || "N/A";
-    let notasResumen = "N/A";
-    if (
-      materia.notaParcial1 !== undefined ||
-      materia.notaParcial2 !== undefined ||
-      materia.notaFinal !== undefined
-    ) {
-      notasResumen = `P1: ${materia.notaParcial1 || "N/A"}, P2: ${materia.notaParcial2 || "N/A"}, Final: ${materia.notaFinal || "N/A"}`;
-    } else if (materia.notas) {
-      notasResumen = `P1: ${materia.notas.parcial1}, P2: ${materia.notas.parcial2}, Final: ${materia.notas.final}`;
-    }
-
+  inscripciones.forEach((insc) => {
+    // Cada inscripción tiene la información global en insc.materia
+    const nombre = insc.materia?.NombreMateria || "N/A";
+    const id = insc.idMateriaUsuario; // ID de la inscripción (para editar, eliminar, etc.)
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${nombre}</td>
-      <td>${anioDeCarrera}</td>
-      <td>${anio}</td>
-      <td>${horario}</td>
-      <td>${modalidad}</td>
-      <td>${correlativas}</td>
-      <td>${examenFecha}</td>
-      <td>${notasResumen}</td>
       <td>
-        <span class="detalles" onclick="showDetails(${materia.id})">
+        <span class="detalles" onclick="showDetails(${id})">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
             <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/>
             <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>
           </svg>
         </span>
-        <span class="editar" onclick="editMateria(${materia.id})">
+        <span class="editar" onclick="editMateria(${id})">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
-            <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>
+            <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207z"/>
           </svg>
         </span>
-        <span class="eliminar" onclick="deleteMateria(${materia.id})">
+        <span class="eliminar" onclick="deleteMateria(${id})">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
             <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
           </svg>
         </span>
       </td>
@@ -117,51 +107,34 @@ function renderMaterias(materias) {
 }
 
 function openFormModal() {
+  // Al abrir el formulario, volvemos a poblar el select en caso de que haya cambios
+  populateMateriasSelect();
   document.getElementById("form-modal").style.display = "flex";
 }
 
 function closeFormModal() {
   document.getElementById("form-modal").style.display = "none";
   clearForm();
-  editingMateriaId = null;
+  editingInscripcionId = null;
 }
 
 function clearForm() {
-  document.getElementById("materia").value = "";
-  document.getElementById("anioDeCarrera").value = "";
-  document.getElementById("anio").value = "";
-  document.getElementById("modalidad").value = "Presencial";
-  document.getElementById("correlativas").value = "";
-  document.getElementById("dia").value = "Lunes";
-  document.getElementById("horaInicio").value = "";
-  document.getElementById("horaFin").value = "";
-  document.getElementById("examen").value = "";
-  document.getElementById("notaParcial1").value = "";
-  document.getElementById("notaParcial2").value = "";
-  document.getElementById("notaFinal").value = "";
+  // Limpia el select de materia (puedes dejar la primer opción por defecto)
+  document.getElementById("NombreMateria").selectedIndex = 0;
+  // Si tienes otros campos globales, límpialos también.
   document.getElementById("eventos-container").innerHTML = `<h3>Eventos</h3>`;
 }
 
 function getMateriaFromForm() {
-  const nombre = document.getElementById("materia").value;
-  const anioDeCarrera = document.getElementById("anioDeCarrera").value;
-  const anio = document.getElementById("anio").value;
-  const modalidad = document.getElementById("modalidad").value;
-  const correlativasStr = document.getElementById("correlativas").value;
-  const correlativas = correlativasStr
-    ? correlativasStr.split(",").map((s) => s.trim())
-    : [];
-
-  const dia = document.getElementById("dia").value;
-  const horaInicio = document.getElementById("horaInicio").value;
-  const horaFin = document.getElementById("horaFin").value;
-  const horario =
-    dia && horaInicio && horaFin ? `${dia} ${horaInicio} - ${horaFin}` : "N/A";
-
-  const examen = document.getElementById("examen").value;
-  const notaParcial1 = document.getElementById("notaParcial1").value;
-  const notaParcial2 = document.getElementById("notaParcial2").value;
-  const notaFinal = document.getElementById("notaFinal").value;
+  // Obtiene el valor seleccionado del select
+  const selectMateria = document.getElementById("NombreMateria");
+  const NombreMateria = selectMateria.value;
+  // Si necesitas otros campos globales, recógelos:
+  const anio = document.getElementById("anio") ? document.getElementById("anio").value : "";
+  const horario = document.getElementById("horario") ? document.getElementById("horario").value : "";
+  const modalidad = document.getElementById("modalidad") ? document.getElementById("modalidad").value : "";
+  const correlativasStr = document.getElementById("correlativas") ? document.getElementById("correlativas").value : "";
+  const correlativas = correlativasStr ? correlativasStr.split(",").map(s => s.trim()) : [];
 
   // Recolecta los eventos agregados dinámicamente
   const eventos = [];
@@ -174,55 +147,46 @@ function getMateriaFromForm() {
     eventos.push({ tipo, numero, temasAEstudiar, estado, fechaEntrega });
   });
 
-  // Usamos la variable global loggedUserId en vez de localStorage.
   return {
-    nombre,
-    anioDeCarrera: anioDeCarrera ? parseInt(anioDeCarrera) : null,
+    NombreMateria,
     anio,
     horario,
     modalidad,
     correlativas,
-    examen,
-    notas: {
-      parcial1: notaParcial1 ? parseFloat(notaParcial1) : null,
-      parcial2: notaParcial2 ? parseFloat(notaParcial2) : null,
-      final: notaFinal ? parseFloat(notaFinal) : null,
-    },
     eventos,
-    userId: loggedUserId
+    idUsuario: loggedUserId
   };
 }
 
 function saveMateria() {
   const materiaData = getMateriaFromForm();
-
-  if (!editingMateriaId) {
-    // Creación de una nueva materia usando la DB
+  if (!editingInscripcionId) {
+    // Crear una inscripción (POST)
     fetch("/db/materia", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(materiaData),
     })
-      .then((response) => response.json())
+      .then(response => response.json())
       .then(() => {
         loadMaterias();
         closeFormModal();
       })
-      .catch((err) => console.error(err));
+      .catch(err => console.error(err));
   } else {
-    // Edición de una materia existente usando la DB
-    fetch(`/db/materia/${editingMateriaId}`, {
+    // Actualizar la inscripción existente (PUT)
+    fetch(`/db/materia/${editingInscripcionId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(materiaData),
     })
-      .then((response) => response.json())
+      .then(response => response.json())
       .then(() => {
         loadMaterias();
         closeFormModal();
-        editingMateriaId = null;
+        editingInscripcionId = null;
       })
-      .catch((err) => console.error(err));
+      .catch(err => console.error(err));
   }
 }
 
@@ -239,7 +203,7 @@ function deleteMateria(id) {
   }).then((result) => {
     if (result.isConfirmed) {
       fetch(`/db/materia/${id}`, { method: "DELETE" })
-        .then((response) => {
+        .then(response => {
           if (response.ok) {
             Swal.fire({
               title: 'Eliminado!',
@@ -253,7 +217,7 @@ function deleteMateria(id) {
             Swal.fire('Error', 'Error al eliminar la materia.', 'error');
           }
         })
-        .catch((err) => console.error(err));
+        .catch(err => console.error(err));
     }
   });
 }
@@ -294,26 +258,16 @@ function eliminarEvento(button) {
 
 function showDetails(id) {
   fetch(`/db/materia/${id}`)
-    .then((res) => res.json())
-    .then((materia) => {
+    .then(res => res.json())
+    .then(inscripcion => {
       const detailsContent = document.getElementById("details-content");
       detailsContent.innerHTML = `
-        <p><strong>Materia:</strong> ${materia.nombre || "N/A"}</p>
-        <p><strong>Año de Carrera:</strong> ${materia.anioDeCarrera || "N/A"}</p>
-        <p><strong>Año:</strong> ${materia.anio || "N/A"}</p>
-        <p><strong>Horario:</strong> ${materia.horario || "N/A"}</p>
-        <p><strong>Modalidad:</strong> ${materia.modalidad || "N/A"}</p>
-        <p><strong>Correlativas:</strong> ${Array.isArray(materia.correlativas) ? materia.correlativas.join(", ") : "N/A"}</p>
-        <p><strong>Fecha de Examen:</strong> ${materia.examen || "N/A"}</p>
-        <p><strong>Notas:</strong> ${
-          (materia.notaParcial1 || materia.notaParcial2 || materia.notaFinal)
-            ? `P1: ${materia.notaParcial1}, P2: ${materia.notaParcial2}, Final: ${materia.notaFinal}`
-            : "N/A"
-        }</p>
+        <p><strong>Materia:</strong> ${inscripcion.materia?.NombreMateria || "N/A"}</p>
+        <p><strong>ID de inscripción:</strong> ${inscripcion.idMateriaUsuario}</p>
         <p><strong>Eventos:</strong></p>
       `;
-      if (materia.eventos && materia.eventos.length > 0) {
-        materia.eventos.forEach((ev) => {
+      if (inscripcion.eventos && inscripcion.eventos.length > 0) {
+        inscripcion.eventos.forEach(ev => {
           detailsContent.innerHTML += `<p>${ev.tipo} ${ev.numero}: ${ev.temasAEstudiar} - ${ev.estado} (Entrega: ${ev.fechaEntrega})</p>`;
         });
       } else {
@@ -321,7 +275,7 @@ function showDetails(id) {
       }
       document.getElementById("details-modal").style.display = "flex";
     })
-    .catch((err) => console.error(err));
+    .catch(err => console.error(err));
 }
 
 function closeDetailsModal() {
@@ -357,13 +311,10 @@ function login() {
       return response.json();
     })
     .then(data => {
-      // En vez de guardar en localStorage, asignamos a la variable global
-      loggedUserId = data.user.id;
+      loggedUserId = data.user.id;  // Asigna el ID del usuario a la variable global
       document.getElementById("login-modal").style.display = "none";
       const headerContainer = document.querySelector(".header-container");
       headerContainer.innerHTML += `<p style="color: #fff; margin-left: 10px;">Bienvenido, ${data.user.nombre} (${data.user.rol})</p>`;
-      
-      // Cargamos las materias del usuario
       loadMaterias();
     })
     .catch(error => {
@@ -377,42 +328,32 @@ function login() {
 }
 
 function editMateria(id) {
-  editingMateriaId = id;
-  document.getElementById("modal-title").innerText = "Editar Registro";
-
+  editingInscripcionId = id;
+  document.getElementById("modal-title").innerText = "Editar Inscripción";
+  
   fetch(`/db/materia/${id}`)
-    .then((res) => res.json())
-    .then((materia) => {
-      document.getElementById("materia").value = materia.nombre || "";
-      document.getElementById("anioDeCarrera").value = materia.anioDeCarrera || "";
-      document.getElementById("anio").value = materia.anio || "";
-      document.getElementById("modalidad").value = materia.modalidad || "Presencial";
-      document.getElementById("correlativas").value = Array.isArray(materia.correlativas) ? materia.correlativas.join(", ") : "";
-
-      if (materia.horario && materia.horario !== "N/A") {
-        const parts = materia.horario.split(" ");
-        document.getElementById("dia").value = parts[0] || "Lunes";
-        document.getElementById("horaInicio").value = parts[1] || "";
-        document.getElementById("horaFin").value = parts[3] || "";
-      } else {
-        document.getElementById("dia").value = "Lunes";
-        document.getElementById("horaInicio").value = "";
-        document.getElementById("horaFin").value = "";
+    .then(res => res.json())
+    .then(inscripcion => {
+      // Carga los datos de la inscripción
+      // En este caso, para la materia, se selecciona el valor correspondiente en el select
+      const selectMateria = document.getElementById("NombreMateria");
+      if (inscripcion.materia && inscripcion.materia.NombreMateria) {
+        // Selecciona la opción que coincida con el nombre de la materia
+        Array.from(selectMateria.options).forEach(option => {
+          if (option.value === inscripcion.materia.NombreMateria) {
+            option.selected = true;
+          }
+        });
       }
-
-      document.getElementById("examen").value = materia.examen || "";
-      document.getElementById("notaParcial1").value = materia.notaParcial1 || "";
-      document.getElementById("notaParcial2").value = materia.notaParcial2 || "";
-      document.getElementById("notaFinal").value = materia.notaFinal || "";
-
+      // Rellena los eventos:
       const eventosContainer = document.getElementById("eventos-container");
       eventosContainer.innerHTML = `<h3>Eventos</h3>`;
-      if (materia.eventos && materia.eventos.length > 0) {
-        materia.eventos.forEach((ev) => {
+      if (inscripcion.eventos && inscripcion.eventos.length > 0) {
+        inscripcion.eventos.forEach(ev => {
           const eventoDiv = document.createElement("div");
           eventoDiv.classList.add("evento");
           eventoDiv.innerHTML = `
-            <label>Tipo: 
+            <label>Tipo:
               <select class="tipo">
                 <option value="Parcial 1" ${ev.tipo === "Parcial 1" ? "selected" : ""}>Parcial 1</option>
                 <option value="Parcial 2" ${ev.tipo === "Parcial 2" ? "selected" : ""}>Parcial 2</option>
@@ -424,7 +365,7 @@ function editMateria(id) {
             </label>
             <label>Número: <input type="number" class="numero" value="${ev.numero}" placeholder="Número"></label>
             <label>Temas a Estudiar: <input type="text" class="temasAEstudiar" value="${ev.temasAEstudiar}" placeholder="Temas"></label>
-            <label>Estado: 
+            <label>Estado:
               <select class="estado">
                 <option value="Pendiente" ${ev.estado === "Pendiente" ? "selected" : ""}>Pendiente</option>
                 <option value="En curso" ${ev.estado === "En curso" ? "selected" : ""}>En curso</option>
@@ -437,8 +378,7 @@ function editMateria(id) {
           eventosContainer.appendChild(eventoDiv);
         });
       }
-
       openFormModal();
     })
-    .catch((err) => console.error(err));
+    .catch(err => console.error(err));
 }

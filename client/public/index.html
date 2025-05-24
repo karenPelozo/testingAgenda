@@ -5,18 +5,18 @@
   <title>Agenda de Materias</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body style="background-image: url('img/banner_colorido.png'); background-size: cover; background-repeat: no-repeat; background-position: center center; ; background-attachment: fixed;">
+<body style="background-image: url('img/banner_colorido.png'); background-size: cover; background-repeat: no-repeat; background-position: center center; background-attachment: fixed;">
   
-<div id="login-modal">
-  <form id="login-form" onsubmit="login(); return false;">
-    <div id="login-modal-content">
-      <h2>Inicio de sesión</h2>
-      <input type="text" id="username" placeholder="Usuario">
-      <input type="password" id="password" placeholder="Contraseña">
-      <button type="submit" id="btnLogin">Ingresar</button>
-    </div>
-  </form>
-</div>
+  <div id="login-modal">
+    <form id="login-form" onsubmit="login(); return false;">
+      <div id="login-modal-content">
+        <h2>Inicio de sesión</h2>
+        <input type="text" id="username" placeholder="Usuario">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button type="submit" id="btnLogin">Ingresar</button>
+      </div>
+    </form>
+  </div>
   
   <div class="header-container">
     <h1>Agenda de Materias</h1>
@@ -25,16 +25,11 @@
         <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
       </svg>
     </span>
-    
   </div>
   
-  <!-- <button id="btnOpenForm"><img src="img/leyendo.png" alt="Logo" class="logo">Nuevo</button>
-    <div class="icon-wrapper"> -->
-
   <img src="img/leyendo.png" alt="Logo" class="icon-left">
-  </div>
+  
   <table id="materiasTable">
-    
     <thead>
       <tr>
         <th>Materia</th>
@@ -52,16 +47,20 @@
   </table>
 
   <div class="button-wrapper">
-  <button id="btnOpenForm">Nuevo</button>
-</div>
+    <button id="btnOpenForm">Nuevo</button>
+  </div>
   
   <!-- Modal para el formulario de alta/edición -->
   <div id="form-modal">
     <div id="form-modal-content">
       <h2 id="modal-title">Nuevo Registro</h2>
       
-      <label for="materia">Materia:</label>
-      <input type="text" id="materia" placeholder="Nombre de la materia">
+      <label for="NombreMateria">Materia:</label>
+      <!-- Se reemplaza el input por un select para mostrar el listado de materias globales -->
+      <select id="NombreMateria">
+        <!-- Se poblará dinámicamente mediante script.js -->
+        <option value="">-- Seleccione una Materia --</option>
+      </select>
       
       <label for="anioDeCarrera">Año de Carrera:</label>
       <input type="number" id="anioDeCarrera" placeholder="Año de Carrera">
@@ -133,7 +132,6 @@
   <script src="js/script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
-
 <footer>
   <div>
     <img src="https://edunpaz.unpaz.edu.ar/OMP/public/site/images/userbiblio/unpaz_horizontal-transparente_(400X139px).png" 

@@ -1,9 +1,9 @@
-// client/models/Evento.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../Data/db');
+// models/Evento.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../Data/db");
 
-const Evento = sequelize.define('Evento', {
-  id: {
+const Evento = sequelize.define("Evento", {
+  idEvento: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -14,23 +14,26 @@ const Evento = sequelize.define('Evento', {
   },
   numero: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   temasAEstudiar: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   estado: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   fechaEntrega: {
-    type: DataTypes.DATEONLY,
-    allowNull: false,
+    type: DataTypes.DATE,
+    allowNull: true,
   },
-  // La clave foránea 'materiaId' se agregará mediante la asociación
+  idMateriaUsuario: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  }
 }, {
-  tableName: 'eventos',
+  tableName: "eventos",
   timestamps: false,
 });
 
