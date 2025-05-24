@@ -1,19 +1,24 @@
 // models/index.js
-const User = require("./User"); // No lo modificamos
+const User = require("./User"); // No modificamos el modelo de usuario
 const Materia = require("./Materia");
 const MateriaUsuario = require("./MateriaUsuario");
 const Evento = require("./Evento");
+const Modalidad = require("./Modalidad");
 
-// Un usuario puede estar inscrito en muchas materias
+// Asociaciones entre Usuario y MateriaUsuario:
 User.hasMany(MateriaUsuario, { foreignKey: "idUsuario", as: "materiasInscritas" });
 MateriaUsuario.belongsTo(User, { foreignKey: "idUsuario", as: "usuario" });
 
-// Una materia global puede tener muchas inscripciones (muchos alumnos cursándola)
+// Asociaciones entre Materia y MateriaUsuario:
 Materia.hasMany(MateriaUsuario, { foreignKey: "idMateria", as: "inscripciones" });
 MateriaUsuario.belongsTo(Materia, { foreignKey: "idMateria", as: "materia" });
 
-// Cada inscripción (MateriaUsuario) tendrá muchos eventos propios
+// Asociación entre MateriaUsuario y Evento:
 MateriaUsuario.hasMany(Evento, { foreignKey: "idMateriaUsuario", as: "eventos" });
 Evento.belongsTo(MateriaUsuario, { foreignKey: "idMateriaUsuario", as: "inscripcion" });
 
-module.exports = { User, Materia, MateriaUsuario, Evento };
+// Asociación entre Evento y Modalidad:
+Modalidad.hasMany(Evento, { foreignKey: "idModalidad", as: "eventos" });
+Evento.belongsTo(Modalidad, { foreignKey: "idModalidad", as: "modalidad" });
+
+module.exports = { User, Materia, MateriaUsuario, Evento, Modalidad };

@@ -12,22 +12,48 @@ const Evento = sequelize.define("Evento", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  numero: {
+  anioDeCarrera: {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
-  temasAEstudiar: {
+  anio: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  // Relación a Modalidad mediante FK:
+  idModalidad: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  dia: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  estado: {
-    type: DataTypes.STRING,
+  horaInicio: {
+    type: DataTypes.TIME,
     allowNull: true,
   },
-  fechaEntrega: {
-    type: DataTypes.DATE,
+  horaFin: {
+    type: DataTypes.TIME,
     allowNull: true,
   },
+  fechaExamen: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
+  notaParcial1: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  notaParcial2: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  notaFinal: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  // Clave foránea a la inscripción
   idMateriaUsuario: {
     type: DataTypes.INTEGER,
     allowNull: false,

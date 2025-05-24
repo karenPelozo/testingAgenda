@@ -1,21 +1,20 @@
-// models/Materia.js
+// models/Modalidad.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../Data/db");
 
-const Materia = sequelize.define("Materia", {
-  idMateria: {
+const Modalidad = sequelize.define("Modalidad", {
+  idModalidad: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   },
-  NombreMateria: {
+  Nombre: {
     type: DataTypes.STRING,
     allowNull: false,
   }
-  // Agrega otros campos globales si es necesario (anio, horario, etc.)
 }, {
-  tableName: "materias",
+  tableName: "modalidades",
   timestamps: false,
 });
 
-module.exports = Materia;
+module.exports = Modalidad;

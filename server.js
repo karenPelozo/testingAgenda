@@ -9,14 +9,13 @@ const port = process.env.PORT || 3000;
 // Importa la conexión de Sequelize y los modelos
 const sequelize = require('./client/Data/db');
 const User = require('./client/models/User');
-// Importamos los modelos desde el archivo index.js de models (que centraliza las asociaciones)
-const { Materia, MateriaUsuario, Evento } = require('./client/models/index');
+const { Materia, MateriaUsuario, Evento, Modalidad } = require('./client/models/index');
 
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "client", "public")));
 
-// Ruta raíz: envía el index.html
+// Ruta raíz: enviar index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "public", "index.html"));
 });
@@ -25,21 +24,18 @@ app.get("/", (req, res) => {
   Endpoints para Usuarios
 ============================================*/
 
-// Registrar un Usuario
+// Registro de Usuario
 app.post("/register", async (req, res) => {
   try {
     const { nombre, password, rol } = req.body;
     if (!nombre || !password || !rol) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
-    // Verifica si el usuario ya existe
     const existingUser = await User.findOne({ where: { nombre } });
     if (existingUser) {
       return res.status(400).json({ error: "El usuario ya existe" });
     }
-    // Hashea la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Crea el usuario en la base de datos
     const newUser = await User.create({
       nombre,
       password: hashedPassword,
@@ -73,10 +69,10 @@ app.post("/login", async (req, res) => {
 });
 
 /*===========================================
-  Endpoints para Inscripciones de Materias (MateriaUsuario) y Eventos
+  Endpoints para Inscripciones de Materias y Eventos
 ============================================*/
 
-// POST: Inscribir a un usuario en una materia (crea o utiliza la materia global) y registra sus eventos
+// POST: Inscribir a un usuario en una materia y registrar sus eventos
 app.post("/db/materia", async (req, res) => {
   try {
     // Se espera recibir un JSON similar a:
@@ -84,23 +80,37 @@ app.post("/db/materia", async (req, res) => {
     //   "NombreMateria": "Matemática 1",
     //   "anio": "2025",
     //   "horario": "Lunes 8:00 - 12:00",
-    //   "modalidad": "Presencial",
-    //   "correlativas": [],
-    //   "eventos": [ { "tipo": "Parcial", "numero": 1, "temasAEstudiar": "Conceptos básicos", "estado": "En curso", "fechaEntrega": "2025-07-01" } ],
+    //   "modalidad": "Presencial", // esto se utiliza solo desde el select global de Materia
+    //   "correlativas": [],  // opcional
+    //   "eventos": [
+    //      {
+    //        "tipo": "Parcial 1",
+    //        "anioDeCarrera": 1,
+    //        "anio": 2025,
+    //        "idModalidad": 1,  // idModalidad de la modalidad seleccionada (Presencial, etc.)
+    //        "dia": "Lunes",
+    //        "horaInicio": "08:00",
+    //        "horaFin": "10:00",
+    //        "fechaExamen": "2025-06-15",
+    //        "notaParcial1": 8.5,
+    //        "notaParcial2": 7.0,
+    //        "notaFinal": 9.0
+    //      }
+    //   ],
     //   "idUsuario": 2
     // }
     const { NombreMateria, anio, horario, modalidad, correlativas, eventos, idUsuario } = req.body;
     if (!NombreMateria || !idUsuario) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
-    
-    // Busca la materia global o la crea si no existe
+
+    // Busca o crea la materia global
     let materia = await Materia.findOne({ where: { NombreMateria } });
     if (!materia) {
       materia = await Materia.create({ NombreMateria, anio, horario, modalidad, correlativas });
     }
     
-    // Crea la inscripción en MateriaUsuario
+    // Crea la inscripción (relación) del usuario con la materia
     const inscripcion = await MateriaUsuario.create({
       idMateria: materia.idMateria,
       idUsuario
@@ -111,21 +121,27 @@ app.post("/db/materia", async (req, res) => {
       for (const evt of eventos) {
         await Evento.create({
           tipo: evt.tipo,
-          numero: evt.numero,
-          temasAEstudiar: evt.temasAEstudiar,
-          estado: evt.estado,
-          fechaEntrega: evt.fechaEntrega,
+          anioDeCarrera: evt.anioDeCarrera,
+          anio: evt.anio,
+          idModalidad: evt.idModalidad,
+          dia: evt.dia,
+          horaInicio: evt.horaInicio,
+          horaFin: evt.horaFin,
+          fechaExamen: evt.fechaExamen,
+          notaParcial1: evt.notaParcial1,
+          notaParcial2: evt.notaParcial2,
+          notaFinal: evt.notaFinal,
           idMateriaUsuario: inscripcion.idMateriaUsuario
         });
       }
     }
     
-    // Recupera la inscripción completa con la materia global y sus eventos
+    // Recupera la inscripción completa con la materia y sus eventos
     const inscripcionCompleta = await MateriaUsuario.findOne({
       where: { idMateriaUsuario: inscripcion.idMateriaUsuario },
       include: [
         { model: Materia, as: "materia" },
-        { model: Evento, as: "eventos" }
+        { model: Evento, as: "eventos", include: [{ model: Modalidad, as: "modalidad" }] }
       ]
     });
     
@@ -136,7 +152,7 @@ app.post("/db/materia", async (req, res) => {
   }
 });
 
-// GET: Obtener todas las inscripciones (es decir, todas las materias inscritas de un usuario)
+// GET: Obtener todas las inscripciones (materias inscritas) de un usuario
 app.get("/db/materias", async (req, res) => {
   try {
     const idUsuario = req.query.idUsuario;
@@ -147,7 +163,7 @@ app.get("/db/materias", async (req, res) => {
       where: { idUsuario },
       include: [
         { model: Materia, as: "materia" },
-        { model: Evento, as: "eventos" }
+        { model: Evento, as: "eventos", include: [{ model: Modalidad, as: "modalidad" }] }
       ]
     });
     res.json(inscripciones);
@@ -156,7 +172,7 @@ app.get("/db/materias", async (req, res) => {
   }
 });
 
-// GET: Obtener una inscripción por ID (con la materia global y sus eventos)
+// GET: Obtener una inscripción en particular por ID (con materia y eventos)
 app.get("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,7 +180,7 @@ app.get("/db/materia/:id", async (req, res) => {
       where: { idMateriaUsuario: id },
       include: [
         { model: Materia, as: "materia" },
-        { model: Evento, as: "eventos" }
+        { model: Evento, as: "eventos", include: [{ model: Modalidad, as: "modalidad" }] }
       ]
     });
     if (!inscripcion) {
@@ -187,13 +203,13 @@ app.put("/db/materia/:id", async (req, res) => {
     
     const { NombreMateria, anio, horario, modalidad, correlativas, eventos, idUsuario } = req.body;
     
-    // Actualiza la materia global asociada (si es que se suministran nuevos datos)
+    // Actualiza la materia global asociada (si se suministran nuevos datos)
     let materia = await Materia.findOne({ where: { idMateria: inscripcion.idMateria } });
     if (NombreMateria) {
       await materia.update({ NombreMateria, anio, horario, modalidad, correlativas });
     }
     
-    // Actualiza la inscripción (puede actualizar el idUsuario si es necesario)
+    // Actualiza la inscripción (puede actualizar idUsuario si es necesario)
     await inscripcion.update({ idUsuario });
     
     // Actualiza los eventos: elimina los existentes y crea los nuevos
@@ -202,10 +218,16 @@ app.put("/db/materia/:id", async (req, res) => {
       for (const evt of eventos) {
         await Evento.create({
           tipo: evt.tipo,
-          numero: evt.numero,
-          temasAEstudiar: evt.temasAEstudiar,
-          estado: evt.estado,
-          fechaEntrega: evt.fechaEntrega,
+          anioDeCarrera: evt.anioDeCarrera,
+          anio: evt.anio,
+          idModalidad: evt.idModalidad,
+          dia: evt.dia,
+          horaInicio: evt.horaInicio,
+          horaFin: evt.horaFin,
+          fechaExamen: evt.fechaExamen,
+          notaParcial1: evt.notaParcial1,
+          notaParcial2: evt.notaParcial2,
+          notaFinal: evt.notaFinal,
           idMateriaUsuario: id
         });
       }
@@ -215,7 +237,7 @@ app.put("/db/materia/:id", async (req, res) => {
       where: { idMateriaUsuario: id },
       include: [
         { model: Materia, as: "materia" },
-        { model: Evento, as: "eventos" }
+        { model: Evento, as: "eventos", include: [{ model: Modalidad, as: "modalidad" }] }
       ]
     });
     
@@ -226,7 +248,7 @@ app.put("/db/materia/:id", async (req, res) => {
   }
 });
 
-// DELETE: Eliminar una inscripción y sus eventos
+// DELETE: Eliminar una inscripción (y sus eventos)
 app.delete("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -242,7 +264,7 @@ app.delete("/db/materia/:id", async (req, res) => {
 });
 
 /*===========================================
-  Endpoints para la tabla Global de Materia
+  Endpoints para la Tabla Global de Materia
 ============================================*/
 
 // GET: Listar todas las materias globales
@@ -264,6 +286,34 @@ app.post("/db/materia/global", async (req, res) => {
     }
     const materia = await Materia.create({ NombreMateria, anio, horario, modalidad, correlativas });
     res.status(201).json(materia);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/*===========================================
+  Endpoints para la Tabla de Modalidad
+============================================*/
+
+// GET: Listar todas las modalidades
+app.get("/db/modalidades", async (req, res) => {
+  try {
+    const modalidades = await Modalidad.findAll();
+    res.json(modalidades);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST: Crear una modalidad (por ejemplo Presencial, Virtual, Híbrido)
+app.post("/db/modalidades", async (req, res) => {
+  try {
+    const { Nombre } = req.body;
+    if (!Nombre) {
+      return res.status(400).json({ error: "El campo Nombre es obligatorio" });
+    }
+    const modalidad = await Modalidad.create({ Nombre });
+    res.status(201).json(modalidad);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

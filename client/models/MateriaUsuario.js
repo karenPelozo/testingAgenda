@@ -16,7 +16,7 @@ const MateriaUsuario = sequelize.define("MateriaUsuario", {
     type: DataTypes.INTEGER,
     allowNull: false,
   }
-  // Puedes agregar otros campos (por ejemplo, fecha de inscripción, etc.)
+  // Puedes agregar otros campos aquí (ej., fecha de inscripción)
 }, {
   tableName: "materias_usuarios",
   timestamps: false,

@@ -4,8 +4,9 @@ let loggedUserId = null;
 let editingInscripcionId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Al cargar el DOM, intenta poblar el select de materias globales
+  // Al cargar el DOM, pobla ambos selects: materias y modalidades
   populateMateriasSelect();
+  populateModalidadesSelect();
 
   // Si el usuario ya se logueó, carga sus inscripciones
   if (loggedUserId) {
@@ -35,22 +36,44 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// Función para poblar el select de materias globales
 function populateMateriasSelect() {
-  // Obtiene la lista de materias globales para rellenar el select
   fetch("/db/materias/global")
     .then(res => res.json())
     .then(data => {
       const select = document.getElementById("NombreMateria");
-      // Limpiamos el select
-      select.innerHTML = `<option value="">-- Seleccione una Materia --</option>`;
-      data.forEach(materia => {
-        const option = document.createElement("option");
-        option.value = materia.NombreMateria; // Usamos el nombre como valor; si necesitas el id, podrías usar materia.idMateria
-        option.text = materia.NombreMateria;
-        select.appendChild(option);
-      });
+      if (select) {
+        select.innerHTML = `<option value="">-- Seleccione una Materia --</option>`;
+        data.forEach(materia => {
+          const option = document.createElement("option");
+          // Si prefieres usar el idMateria como value, puedes hacerlo.
+          option.value = materia.NombreMateria;
+          option.text = materia.NombreMateria;
+          select.appendChild(option);
+        });
+      }
     })
     .catch(err => console.error("Error al cargar materias globales:", err));
+}
+
+// Función para poblar el select de modalidades
+function populateModalidadesSelect() {
+  fetch("/db/modalidades")
+    .then(res => res.json())
+    .then(data => {
+      const select = document.getElementById("idModalidad");
+      if (select) {
+        select.innerHTML = `<option value="">-- Seleccione una Modalidad --</option>`;
+        data.forEach(mod => {
+          const option = document.createElement("option");
+          // Guardamos el idModalidad como valor
+          option.value = mod.idModalidad;
+          option.text = mod.Nombre;
+          select.appendChild(option);
+        });
+      }
+    })
+    .catch(err => console.error("Error al cargar modalidades:", err));
 }
 
 function loadMaterias() {
@@ -58,7 +81,7 @@ function loadMaterias() {
     console.error("El ID del usuario no está definido.");
     return;
   }
-  // Consulta las inscripciones (materias que tiene el usuario) de la base de datos
+  // Consulta las inscripciones (materias que tiene el usuario)
   fetch(`/db/materias?idUsuario=${loggedUserId}`)
     .then((res) => res.json())
     .then((data) => {
@@ -77,9 +100,8 @@ function renderMaterias(inscripciones) {
   tbody.innerHTML = "";
 
   inscripciones.forEach((insc) => {
-    // Cada inscripción tiene la información global en insc.materia
     const nombre = insc.materia?.NombreMateria || "N/A";
-    const id = insc.idMateriaUsuario; // ID de la inscripción (para editar, eliminar, etc.)
+    const id = insc.idMateriaUsuario;
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${nombre}</td>
@@ -107,8 +129,8 @@ function renderMaterias(inscripciones) {
 }
 
 function openFormModal() {
-  // Al abrir el formulario, volvemos a poblar el select en caso de que haya cambios
   populateMateriasSelect();
+  populateModalidadesSelect(); // Pobla el select de modalidades cada vez que se abre el formulario
   document.getElementById("form-modal").style.display = "flex";
 }
 
@@ -119,22 +141,28 @@ function closeFormModal() {
 }
 
 function clearForm() {
-  // Limpia el select de materia (puedes dejar la primer opción por defecto)
   document.getElementById("NombreMateria").selectedIndex = 0;
-  // Si tienes otros campos globales, límpialos también.
+  const selectModalidad = document.getElementById("idModalidad");
+  if (selectModalidad) {
+    selectModalidad.selectedIndex = 0;
+  }
   document.getElementById("eventos-container").innerHTML = `<h3>Eventos</h3>`;
 }
 
 function getMateriaFromForm() {
-  // Obtiene el valor seleccionado del select
+  // Obtiene el valor seleccionado del select de materias
   const selectMateria = document.getElementById("NombreMateria");
   const NombreMateria = selectMateria.value;
-  // Si necesitas otros campos globales, recógelos:
+  // Obtiene otros campos globales (si existen)
   const anio = document.getElementById("anio") ? document.getElementById("anio").value : "";
   const horario = document.getElementById("horario") ? document.getElementById("horario").value : "";
   const modalidad = document.getElementById("modalidad") ? document.getElementById("modalidad").value : "";
   const correlativasStr = document.getElementById("correlativas") ? document.getElementById("correlativas").value : "";
-  const correlativas = correlativasStr ? correlativasStr.split(",").map(s => s.trim()) : [];
+  const correlativas = correlativasStr ? correlativasStr.split(",").map(s => s.trim()) : "";
+
+  // Obtiene el valor del select de modalidad (global, si se usa)
+  const selectModalidad = document.getElementById("idModalidad");
+  const idModalidad = selectModalidad ? parseInt(selectModalidad.value) : null;
 
   // Recolecta los eventos agregados dinámicamente
   const eventos = [];
@@ -144,7 +172,8 @@ function getMateriaFromForm() {
     const temasAEstudiar = eventoDiv.querySelector(".temasAEstudiar").value;
     const estado = eventoDiv.querySelector(".estado").value;
     const fechaEntrega = eventoDiv.querySelector(".fechaEntrega").value;
-    eventos.push({ tipo, numero, temasAEstudiar, estado, fechaEntrega });
+    // Puedes agregar aquí la recolección de otros atributos de cada evento
+    eventos.push({ tipo, numero, temasAEstudiar, estado, fechaEntrega, idModalidad });
   });
 
   return {
@@ -161,7 +190,6 @@ function getMateriaFromForm() {
 function saveMateria() {
   const materiaData = getMateriaFromForm();
   if (!editingInscripcionId) {
-    // Crear una inscripción (POST)
     fetch("/db/materia", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -174,7 +202,6 @@ function saveMateria() {
       })
       .catch(err => console.error(err));
   } else {
-    // Actualizar la inscripción existente (PUT)
     fetch(`/db/materia/${editingInscripcionId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -311,7 +338,7 @@ function login() {
       return response.json();
     })
     .then(data => {
-      loggedUserId = data.user.id;  // Asigna el ID del usuario a la variable global
+      loggedUserId = data.user.id;
       document.getElementById("login-modal").style.display = "none";
       const headerContainer = document.querySelector(".header-container");
       headerContainer.innerHTML += `<p style="color: #fff; margin-left: 10px;">Bienvenido, ${data.user.nombre} (${data.user.rol})</p>`;
@@ -334,17 +361,18 @@ function editMateria(id) {
   fetch(`/db/materia/${id}`)
     .then(res => res.json())
     .then(inscripcion => {
-      // Carga los datos de la inscripción
-      // En este caso, para la materia, se selecciona el valor correspondiente en el select
+      // Para la materia global, selecciona la opción correspondiente en el select
       const selectMateria = document.getElementById("NombreMateria");
       if (inscripcion.materia && inscripcion.materia.NombreMateria) {
-        // Selecciona la opción que coincida con el nombre de la materia
         Array.from(selectMateria.options).forEach(option => {
-          if (option.value === inscripcion.materia.NombreMateria) {
-            option.selected = true;
-          }
+          option.selected = (option.value === inscripcion.materia.NombreMateria);
         });
       }
+      // Para la modalidad global, si se usa un select para modalidad (opcional)
+      // Puedes agregar código similar si tu formulario incluye un select de modalidad global: 
+      // const selectModalidad = document.getElementById("idModalidad");
+      // if(inscripcion.modalidad && selectModalidad) { ... }
+      
       // Rellena los eventos:
       const eventosContainer = document.getElementById("eventos-container");
       eventosContainer.innerHTML = `<h3>Eventos</h3>`;
