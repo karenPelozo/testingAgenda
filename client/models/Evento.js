@@ -20,21 +20,12 @@ const Evento = sequelize.define("Evento", {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
-  // Relación a Modalidad mediante FK:
-  idModalidad: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-  },
-  dia: {
+  horario: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  horaInicio: {
-    type: DataTypes.TIME,
-    allowNull: true,
-  },
-  horaFin: {
-    type: DataTypes.TIME,
+  correlativas: {
+    type: DataTypes.STRING,
     allowNull: true,
   },
   fechaExamen: {
@@ -53,7 +44,10 @@ const Evento = sequelize.define("Evento", {
     type: DataTypes.FLOAT,
     allowNull: true,
   },
-  // Clave foránea a la inscripción
+  idModalidad: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   idMateriaUsuario: {
     type: DataTypes.INTEGER,
     allowNull: false,

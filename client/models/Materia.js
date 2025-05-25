@@ -12,7 +12,6 @@ const Materia = sequelize.define("Materia", {
     type: DataTypes.STRING,
     allowNull: false,
   }
-  // Agrega otros campos globales si es necesario (anio, horario, etc.)
 }, {
   tableName: "materias",
   timestamps: false,

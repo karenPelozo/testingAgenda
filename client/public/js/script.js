@@ -46,7 +46,7 @@ function populateMateriasSelect() {
         select.innerHTML = `<option value="">-- Seleccione una Materia --</option>`;
         data.forEach(materia => {
           const option = document.createElement("option");
-          // Utilizamos el NombreMateria; si lo prefieres, podrías usar el idMateria
+          // Se utiliza el NombreMateria; también podrías definir option.value = materia.idMateria
           option.value = materia.NombreMateria;
           option.text = materia.NombreMateria;
           select.appendChild(option);
@@ -66,7 +66,7 @@ function populateModalidadesSelect() {
         select.innerHTML = `<option value="">-- Seleccione una Modalidad --</option>`;
         data.forEach(mod => {
           const option = document.createElement("option");
-          // Se usa el idModalidad como valor
+          // Se usa el idModalidad como value
           option.value = mod.idModalidad;
           option.text = mod.Nombre;
           select.appendChild(option);
@@ -76,12 +76,13 @@ function populateModalidadesSelect() {
     .catch(err => console.error("Error al cargar modalidades:", err));
 }
 
+// Función para cargar (GET) los registros
 function loadMaterias() {
   if (!loggedUserId) {
     console.error("El ID del usuario no está definido.");
     return;
   }
-  // Consulta las inscripciones (materias que tiene el usuario)
+  // Se consulta el endpoint que devuelve la unión de MateriaUsuario y Evento (junto con la Materia)
   fetch(`/db/materias?idUsuario=${loggedUserId}`)
     .then(res => res.json())
     .then(data => {
@@ -90,6 +91,7 @@ function loadMaterias() {
     .catch(err => console.error(err));
 }
 
+// Función para renderizar la tabla
 function renderMaterias(inscripciones) {
   const table = document.getElementById("materiasTable");
   let tbody = table.querySelector("tbody");
@@ -100,46 +102,62 @@ function renderMaterias(inscripciones) {
   tbody.innerHTML = "";
 
   inscripciones.forEach(insc => {
-    const nombre = insc.materia?.NombreMateria || "N/A";
-    const id = insc.idMateriaUsuario;
+    // La tabla Materia solo tiene NombreMateria (global)
+    const materiaNombre = insc.materia?.NombreMateria || "N/A";
+    // Los atributos adicionales se guardan en el registro Evento (usaremos el primer evento)
+    let anioDeCarrera = "";
+    let anio = "";
+    let horario = "";
+    let modalidad = "";
+    let correlativas = "";
+    let fechaExamen = "";
+    let notas = "";
+    if (insc.eventos && insc.eventos.length > 0) {
+      const ev = insc.eventos[0];
+      anioDeCarrera = ev.anioDeCarrera || "";
+      anio = ev.anio || "";
+      horario = ev.horario || "";
+      modalidad = ev.modalidad ? (ev.modalidad.Nombre || "") : "";
+      correlativas = ev.correlativas || "";
+      fechaExamen = ev.fechaExamen || "";
+      notas = `P1: ${ev.notaParcial1 !== undefined ? ev.notaParcial1 : "N/A"}, P2: ${ev.notaParcial2 !== undefined ? ev.notaParcial2 : "N/A"}, Final: ${ev.notaFinal !== undefined ? ev.notaFinal : "N/A"}`;
+    }
+    
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${nombre}</td>
+      <td>${materiaNombre}</td>
+      <td>${anioDeCarrera}</td>
+      <td>${anio}</td>
+      <td>${horario}</td>
+      <td>${modalidad}</td>
+      <td>${correlativas}</td>
+      <td>${fechaExamen}</td>
+      <td>${notas}</td>
       <td>
-        <span class="detalles" onclick="showDetails(${id})">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
-            <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/>
-            <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>
-          </svg>
-        </span>
-        <span class="editar" onclick="editMateria(${id})">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
-            <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207z"/>
-          </svg>
-        </span>
-        <span class="eliminar" onclick="deleteMateria(${id})">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-          </svg>
-        </span>
+        <button onclick="showDetails(${insc.idMateriaUsuario})">Detalles</button>
+        <button onclick="editMateria(${insc.idMateriaUsuario})">Editar</button>
+        <button onclick="deleteMateria(${insc.idMateriaUsuario})">Eliminar</button>
       </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
+// Función para abrir el modal del formulario
 function openFormModal() {
   populateMateriasSelect();
   populateModalidadesSelect();
   document.getElementById("form-modal").style.display = "flex";
 }
 
+// Función para cerrar el formulario
 function closeFormModal() {
   document.getElementById("form-modal").style.display = "none";
   clearForm();
   editingInscripcionId = null;
 }
 
+// Limpia el formulario
 function clearForm() {
   document.getElementById("NombreMateria").selectedIndex = 0;
   const selectModalidad = document.getElementById("idModalidad");
@@ -149,48 +167,83 @@ function clearForm() {
   document.getElementById("eventos-container").innerHTML = `<h3>Eventos</h3>`;
 }
 
+// Función para obtener los datos del formulario
 function getMateriaFromForm() {
-  // Obtiene el valor seleccionado del select de materias
+  // Obtiene el valor del select de materia (global)
   const selectMateria = document.getElementById("NombreMateria");
   const NombreMateria = selectMateria.value;
-  // Obtiene otros campos globales (si los hay)
+  
+  // Obtiene los campos globales que se usan para llenar los registros en Evento
+  const anioDeCarrera = document.getElementById("anioDeCarrera") ? document.getElementById("anioDeCarrera").value : "";
   const anio = document.getElementById("anio") ? document.getElementById("anio").value : "";
   const horario = document.getElementById("horario") ? document.getElementById("horario").value : "";
-  const modalidad = document.getElementById("modalidad") ? document.getElementById("modalidad").value : "";
-  const correlativasStr = document.getElementById("correlativas") ? document.getElementById("correlativas").value : "";
-  const correlativas = correlativasStr ? correlativasStr.split(",").map(s => s.trim()) : "";
-
-  // Obtiene el valor del select de modalidad global
+  const examen = document.getElementById("examen") ? document.getElementById("examen").value : "";
+  const notaParcial1 = document.getElementById("notaParcial1") ? document.getElementById("notaParcial1").value : "";
+  const notaParcial2 = document.getElementById("notaParcial2") ? document.getElementById("notaParcial2").value : "";
+  const notaFinal = document.getElementById("notaFinal") ? document.getElementById("notaFinal").value : "";
+  const correlativas = document.getElementById("correlativas") ? document.getElementById("correlativas").value : "";
+  
+  // Obtiene el valor del select de modalidades (global)
   const selectModalidad = document.getElementById("idModalidad");
   const idModalidad = selectModalidad ? parseInt(selectModalidad.value) : null;
 
   // Recolecta los eventos agregados dinámicamente
-  const eventos = [];
+  const eventosDinamicos = [];
   document.querySelectorAll(".evento").forEach(eventoDiv => {
     const tipo = eventoDiv.querySelector(".tipo").value;
     const numero = parseInt(eventoDiv.querySelector(".numero").value);
     const temasAEstudiar = eventoDiv.querySelector(".temasAEstudiar").value;
     const estado = eventoDiv.querySelector(".estado").value;
     const fechaEntrega = eventoDiv.querySelector(".fechaEntrega").value;
-    // Incluimos idModalidad en cada evento, tomando el global (puedes cambiar esto si cada evento tiene su modaliddad)
-    eventos.push({ tipo, numero, temasAEstudiar, estado, fechaEntrega, idModalidad });
+    // Cada evento dinamicó también hereda los valores globales
+    eventosDinamicos.push({ 
+      tipo, 
+      numero, 
+      temasAEstudiar, 
+      estado, 
+      fechaEntrega, 
+      anioDeCarrera, 
+      anio, 
+      horario, 
+      modalidad: idModalidad,  // guardamos el idModalidad
+      correlativas, 
+      fechaExamen: examen, 
+      notaParcial1, 
+      notaParcial2, 
+      notaFinal 
+    });
   });
+  
+  // Si no se agregaron eventos dinámicos, crea uno usando los valores globales
+  const eventos = eventosDinamicos.length > 0 ? eventosDinamicos : [{
+    tipo: "",
+    numero: 0,
+    temasAEstudiar: "",
+    estado: "",
+    fechaEntrega: "",
+    anioDeCarrera,
+    anio,
+    horario,
+    modalidad: idModalidad,
+    correlativas,
+    fechaExamen: examen,
+    notaParcial1,
+    notaParcial2,
+    notaFinal
+  }];
 
   return {
     NombreMateria,
-    anio,
-    horario,
-    modalidad,
-    correlativas,
     eventos,
     idUsuario: loggedUserId
   };
 }
 
+// Función para guardar (POST o PUT según corresponda)
 function saveMateria() {
   const materiaData = getMateriaFromForm();
   if (!editingInscripcionId) {
-    // Crear inscripción (POST)
+    // Crear registro (POST)
     fetch("/db/materia", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -203,7 +256,7 @@ function saveMateria() {
       })
       .catch(err => console.error(err));
   } else {
-    // Actualizar inscripción (PUT)
+    // Actualizar registro (PUT)
     fetch(`/db/materia/${editingInscripcionId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -229,7 +282,7 @@ function deleteMateria(id) {
     cancelButtonColor: '#6c757d',
     confirmButtonText: 'Sí, eliminar',
     cancelButtonText: 'Cancelar'
-  }).then((result) => {
+  }).then(result => {
     if (result.isConfirmed) {
       fetch(`/db/materia/${id}`, { method: "DELETE" })
         .then(response => {
@@ -293,14 +346,20 @@ function showDetails(id) {
       detailsContent.innerHTML = `
         <p><strong>Materia:</strong> ${inscripcion.materia?.NombreMateria || "N/A"}</p>
         <p><strong>ID de inscripción:</strong> ${inscripcion.idMateriaUsuario}</p>
-        <p><strong>Eventos:</strong></p>
       `;
       if (inscripcion.eventos && inscripcion.eventos.length > 0) {
-        inscripcion.eventos.forEach(ev => {
-          detailsContent.innerHTML += `<p>${ev.tipo} ${ev.numero}: ${ev.temasAEstudiar} - ${ev.estado} (Entrega: ${ev.fechaEntrega})</p>`;
-        });
+        const ev = inscripcion.eventos[0];
+        detailsContent.innerHTML += `
+          <p><strong>Año de Carrera (Evento):</strong> ${ev.anioDeCarrera || ""}</p>
+          <p><strong>Año (Evento):</strong> ${ev.anio || ""}</p>
+          <p><strong>Horario (Evento):</strong> ${ev.horario || ""}</p>
+          <p><strong>Modalidad (Evento):</strong> ${ev.modalidad && ev.modalidad.Nombre ? ev.modalidad.Nombre : ""}</p>
+          <p><strong>Correlativas (Evento):</strong> ${ev.correlativas || ""}</p>
+          <p><strong>Fecha de Examen:</strong> ${ev.fechaExamen || ""}</p>
+          <p><strong>Notas:</strong> P1: ${ev.notaParcial1 || "N/A"}, P2: ${ev.notaParcial2 || "N/A"}, Final: ${ev.notaFinal || "N/A"}</p>
+        `;
       } else {
-        detailsContent.innerHTML += `<p>N/A</p>`;
+        detailsContent.innerHTML += `<p><strong>Eventos:</strong> N/A</p>`;
       }
       document.getElementById("details-modal").style.display = "flex";
     })
@@ -363,16 +422,39 @@ function editMateria(id) {
   fetch(`/db/materia/${id}`)
     .then(res => res.json())
     .then(inscripcion => {
-      // Para la materia global, selecciona la opción en el select que coincida con el NombreMateria
+      // Selecciona la materia global en el select
       const selectMateria = document.getElementById("NombreMateria");
       if (inscripcion.materia && inscripcion.materia.NombreMateria) {
         Array.from(selectMateria.options).forEach(option => {
           option.selected = (option.value === inscripcion.materia.NombreMateria);
         });
       }
-      // Aquí puedes agregar código para rellenar el select de modalidades si fuera necesario
+      // Rellena los campos globales (si están en el formulario) según los datos del primer evento
+      if (inscripcion.eventos && inscripcion.eventos.length > 0) {
+        const ev = inscripcion.eventos[0];
+        if (document.getElementById("anioDeCarrera"))
+          document.getElementById("anioDeCarrera").value = ev.anioDeCarrera || "";
+        if (document.getElementById("anio"))
+          document.getElementById("anio").value = ev.anio || "";
+        if (document.getElementById("horario"))
+          document.getElementById("horario").value = ev.horario || "";
+        if (document.getElementById("examen"))
+          document.getElementById("examen").value = ev.fechaExamen || "";
+        if (document.getElementById("notaParcial1"))
+          document.getElementById("notaParcial1").value = ev.notaParcial1 || "";
+        if (document.getElementById("notaParcial2"))
+          document.getElementById("notaParcial2").value = ev.notaParcial2 || "";
+        if (document.getElementById("notaFinal"))
+          document.getElementById("notaFinal").value = ev.notaFinal || "";
+        if (document.getElementById("correlativas"))
+          document.getElementById("correlativas").value = ev.correlativas || "";
+        // Selecciona la modalidad global en el select si existe modalidad en el evento
+        if (document.getElementById("idModalidad") && ev.modalidad && ev.modalidad.idModalidad) {
+          document.getElementById("idModalidad").value = ev.modalidad.idModalidad;
+        }
+      }
       
-      // Rellena los eventos:
+      // Rellena los eventos dinámicos
       const eventosContainer = document.getElementById("eventos-container");
       eventosContainer.innerHTML = `<h3>Eventos</h3>`;
       if (inscripcion.eventos && inscripcion.eventos.length > 0) {
