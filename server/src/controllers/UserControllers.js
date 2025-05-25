@@ -67,7 +67,9 @@ const updateUser = async (req , res)=>{
 controllerUser.updateUser = updateUser;
 //LOG TEMPORAL
 const logUser = async (req, res)=>{
+   
     try{
+       
         const { nameuser, passworduser } = req.body;
             if (!nameuser || !passworduser) {
                  return res.status(400).json({ error: "Faltan campos obligatorios" });
@@ -80,18 +82,20 @@ const logUser = async (req, res)=>{
     if (!validPassword) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
-    req.session.usuario = usuario
+   // req.session.usuario = usuario
     /*res.cookie('token', token, {
           httpOnly: true,
           secure: false,
           sameSite: 'Lax'
             });
     */
+   console.log(hashPass)
    res.json({ message: "Login exitoso", usuario: { id: usuario.id, nombre: usuario.nameuser, rol: usuario.roluser } });
     }
     }catch(error){
         console.error('Error en login:', error);
         res.status(500).json({ error: error.message })
+       
     }
 }
 controllerUser.logUser = logUser;

@@ -7,26 +7,28 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       //ASOCIACION CON MODALIDAD  UNO A UNO 
-      Materia.hasOne(models.Modalidad, { foreignKey: 'idMateria', as: 'Modalidad' });
+      Materia.hasOne(models.Modalidad, { 
+        foreignKey: 'idMateria'
+       });
       //ASOCIACION CON EVENTOS UNO A UNO 
-      Materia.hasMany(models.Evento, { foreignKey: 'idMateria', as: 'Eventos' });
+      Materia.hasMany(models.Evento, { 
+        foreignKey: 'idMateria'
+       });
       //ASOCIACION CON CORRELATIVAS
       Materia.hasMany(models.Correlativa, {
-        foreignKey:'idMateria', as: 'Correlativas'
+        foreignKey:'idMateria'
       })
-     Materia.belongsTo(models.Correlativa,{
-        foreignKey: 'idMateriaCorrelativa',
-         as: 'CorrelativaDe'
+     Materia.belongsToMany(models.Correlativa,{
+        through: 'MateriaCorrelativa'
         })
       //ASOCIACION MATERIA USUARIO
       Materia.belongsToMany(models.User,{
-        through: 'MateriaUser',
-        foreignKey:'idMateria',
-        otherKey: 'idUser'
-      })
+        through: 'MateriaUser'
+            })
     }
+    
   }
-   //este el promeido de clara
+   //ACA IBA EL PROMEDIO, LA FUNCIO PROMEDIO NO ME FUNCIONO...
   
   Materia.init({
     idMateria: {
@@ -51,18 +53,13 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.INTEGER,
       allowNull:false
     },
-    idModalidad:{
-      type:DataTypes.INTEGER,
-      allowNull:false
-    },
-    idEvento:{
-      type:DataTypes.INTEGER,
-      allowNull:true
-    }
+  
   }, {
     sequelize,
     modelName: 'Materia',
-    tableName: 'Materias'
+    tableName: 'Materias',
+    timestamps:false
   });
+  
   return Materia;
 };

@@ -174,16 +174,16 @@ function getMateriaFromForm() {
 
   return {
     nombre,
-    anioDeCarrera: anioDeCarrera ? parseInt(anioDeCarrera) : null,
-    anio,
+    anioDeCarrera: anioDeCarrera ? parseInt(anioDeCarrera) : null,//number
+    anio: anio ? parseInt(anio) : 2025,
     horario,
     modalidad,
     correlativas,
     examen,
     notas: {
-      parcial1: notaParcial1 ? parseFloat(notaParcial1) : null,
-      parcial2: notaParcial2 ? parseFloat(notaParcial2) : null,
-      final: notaFinal ? parseFloat(notaFinal) : null,
+      parcial1: notaParcial1 ? parseFloat(notaParcial1) : null, //decimal
+      parcial2: notaParcial2 ? parseFloat(notaParcial2) : null, //decimal
+      final: notaFinal ? parseFloat(notaFinal) : null,          //decimal
     },
     eventos,
   };
@@ -386,7 +386,7 @@ function login() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     // Enviamos las credenciales; observa que el nombre del campo es "nombre", ya que en el modelo se llama así.
-    body: JSON.stringify({ nombre: username, password: password })
+    body: JSON.stringify({ nameuser: username, passworduser: password })
   })
     .then(response => {
       if (!response.ok) {
@@ -400,7 +400,7 @@ function login() {
       
       // Aquí podrías, por ejemplo, mostrar un mensaje de bienvenida
       const headerContainer = document.querySelector(".header-container");
-      headerContainer.innerHTML += `<p style="color: #fff; margin-left: 10px;">Bienvenido, ${data.user.nombre} (${data.user.rol})</p>`;
+      headerContainer.innerHTML += `<p style="color: #fff; margin-left: 10px;">Bienvenido, ${data.user.nameuser} (${data.user.roluser})</p>`;
     })
     .catch(error => {
       Swal.fire({

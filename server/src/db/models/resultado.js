@@ -4,15 +4,12 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Resultado extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+    
     static associate(models) {
       // define association here
       Resultado.belongsTo(models.Evento,{
-        foreignKey:'idResultado'
+        foreignKey:'idEvento',
+        as: 'Evento'
       })
     }
   }
@@ -26,13 +23,11 @@ module.exports = (sequelize, DataTypes) => {
     nota:{
       type: DataTypes.DECIMAL
     },
-    idEvento:{
-      type:DataTypes.INTEGER,
-      allowNull:false
-    }
+
   }, {
     sequelize,
     modelName: 'Resultado',
+    timestamps:false
   });
   return Resultado;
 };

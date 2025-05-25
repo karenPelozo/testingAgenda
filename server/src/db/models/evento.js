@@ -4,25 +4,24 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Evento extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+   
     static associate(models) {
       // define association here
       Evento.belongsTo(models.Materia, {
-        foreignKey: 'idEvento', as: 'Materia'
+        foreignKey: 'idMateria'
       });
 
       Evento.hasOne(models.TipoEvento,{
-        foreignKey:'idEvento'
+        foreignKey:'idEvento',
+        as: 'TipoEvento'
       })
       Evento.hasOne(models.Resultado,{
-        foreignKey: 'idEvento'
+        foreignKey: 'idEvento' ,
+        as : 'Nota'
       })
       Evento.hasOne(models.EstadoEvento,{
-        foreignKey:'idEvento'
+        foreignKey:'idEvento',
+        as:'EstadoEvento'
       })
     }
   }
@@ -41,32 +40,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING
     } ,
     fecha:{
-      type:DataTypes.DATE
+      type:DataTypes.DATE,
+      allowNull:true
     },
-    idMateria:{
-      type: DataTypes.INTEGER,
-       references: {
-              model: 'Materias', // nombre de la tabla
-              key: 'id',
-        },
-      allowNull:false
-    },
-    idTipoEvento: {
-      type: DataTypes.INTEGER,
-      allowNull:false
-    },
-    idEstadoEvento:{
-      type: DataTypes.INTEGER,
-      allowNull:false
-    },
-    idResultado:{
-      type: DataTypes.INTEGER,
-      allowNull: false
-    }
+     
   }, {
     sequelize,
     modelName: 'Evento',
-    tableName: 'Eventos'
+    tableName: 'Eventos',
+    timestamps:false
   });
   return Evento;
 };

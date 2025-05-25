@@ -3,15 +3,18 @@ const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
+
+//const {tipoEventFreeze} = require('./server/src/routes/Enum')
 
 // Importa la conexión de Sequelize y el modelo de Usuario
 //const sequelize = require('./client/Data/db')
-const db = require('./server/src/db/models');
-const { User, Materia, Correlativa ,MateriaUser,Evento,Modalidad,TipoEvento,sequelize} = db;
+const { User, Materia, Correlativa ,MateriaUser,Evento,Modalidad,TipoEvento,sequelize} = require('./server/src/db/models');
+
 
 const routerMateria = require('./server/src/routes/MateriaRoutes');
-const routerUser= require('./server/src/routes/UserRoutes')
+const routerUser= require('./server/src/routes/UserRoutes');
+//const { FORCE } = require("sequelize/lib/index-hints");
 //const { alter } = require("./client/src/server/schemas/schemaMateria");
 //let materias = require('./client/Data/materias.json'); // Comentar esto para no trabajar con un json local, le pusimos let y no const para que permita eliminar
 
@@ -33,12 +36,12 @@ app.get("/", (req, res) => {
  require('./client/Data/materias.json') para trabajar con una base en blanco*/
 
 
-app.use(express.static(path.join(__dirname, "client", "public")));
+//app.use(express.static(path.join(__dirname, "client", "public")));
 
 app.use('/materias',routerMateria);
-console.log('RoutesMateria',routerMateria )
-console.log('Tipo de routerUser:', typeof routerUser);
-app.use('/user', routerUser)
+//console.log('RoutesMateria',routerMateria )
+//console.log('Tipo de routerUser:', typeof routerUser);
+app.use('/user',routerUser)
 /*app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "public", "index.html"));
 });
@@ -105,7 +108,8 @@ app.listen(port, () => {
 });
 
 */
-app.post("/login", async (req, res) => {
+ 
+/*app.post("/login", async (req, res) => {
   try {
     const { nombre, password } = req.body;
     if (!nombre || !password) {
@@ -128,7 +132,7 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
+*/
 
 /*===========================================
   Endpoints para Registro y Login de Usuarios
@@ -167,14 +171,18 @@ app.post("/login", async (req, res) => {
 /*===========================================
   Sincronización de la Base de Datos y Arranque del Servidor
 ============================================*/
+
 sequelize.authenticate().then(()=>{
     console.log('CONEXION EXITOSA')
   })
   
-db.sequelize.sync({alter :true})//alter :true
+  sequelize.sync({force:true})//alter :true
   .then(() => {
     console.log("Base de datos y tablas creadas correctamente.");
-      app.listen(port, () => console.log(`Servidor corriendo en http://localhost:${port}`));
+    
+      app.listen(PORT, () => { console.log(`Servidor corriendo en http://localhost:${PORT}`)
+     // console.log(tipoEventFreeze.pacial)      
+    });
   })
   .catch((error) => {
     console.error("Error al sincronizar la base de datos:", error);

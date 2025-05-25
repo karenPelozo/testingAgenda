@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Modalidad.belongsTo(models.Materia, {
-        foreignKey:'idModalidad'
+        foreignKey:'idMateria'
       })
     }
   }
@@ -25,15 +25,12 @@ module.exports = (sequelize, DataTypes) => {
     },
     nameModalidad: {
       type: DataTypes.STRING,
-      allowNull:false
-    },
-    idMateria:{
-      type: DataTypes.INTEGER,
-      allowNull:false 
+      allowNull:false,
     }
   }, {
     sequelize,
     modelName: 'Modalidad',
+    timestamps:false
   });
   return Modalidad;
 };

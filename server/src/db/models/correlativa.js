@@ -11,7 +11,9 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-
+      Correlativa.belongsToMany(models.Materia,{
+        through: 'MateriaCorrelativa'
+      })
     }
   }
   Correlativa.init({
@@ -21,19 +23,14 @@ module.exports = (sequelize, DataTypes) => {
       unique:true,
       allowNull:false
     },
-    idMateria:{
-      type :DataTypes.INTEGER,
-      // preguntar si debo de referenciar a models.Materia references:{  model: 'Materia', key: 'id' }
-      references:{  model: 'Materia', key: 'id' }
-    },
-    idMateriaCorrelativa: {
-      type:DataTypes.INTEGER,
-       // preguntar si debo de referenciar a models.Materia references:{  model: 'Materia', key: 'id' } y como lo puedo hacer aca
-       references:{  model: 'Materia', key: 'id' }
-      }
+    nameCorrelativa:{
+      type:DataTypes.STRING,
+      allowNull:false
+    }
   }, {
     sequelize,
     modelName: 'Correlativa',
+    timestamps:false
   });
   return Correlativa;
 };

@@ -2,11 +2,11 @@ const express= require('express');
 const router = express.Router();
 const controllerUser = require('../controllers/UserControllers')
 //const {schemaValido,existeMateria}= require('../middlewares/MateriaMiddleware')
-//get materias
+//get Usuarios
 router.get('/' ,controllerUser.getUser)
-//getById materias
+//getById Usuarios
 router.get('/:id',controllerUser.getByIdUser)
-//create post materias
+//create post 
 router.post('/',controllerUser.createUser)
 //delete materias
 router.delete('/:id',controllerUser.deleteUser)
@@ -14,6 +14,8 @@ router.delete('/:id',controllerUser.deleteUser)
 router.delete('/',controllerUser.deleteAllUsers)
 //update put materias
 router.put('/:id',controllerUser.updateUser);
+//ACA PONER UNA RUTA DEL USUARIO MATERIA 
+
 //LOGIN TEMPORAL
 router.post('/login',controllerUser.logUser);
 

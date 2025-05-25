@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       EstadoMateriaUser.belongsTo(models.MateriaUser,{
-        foreignKey:'idEstadoRelacion'
+        foreignKey:'idMateriaUser'
       })
     }
   }
@@ -27,13 +27,11 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.STRING,
       allowNull: false
     },
-    idMateriaUser:{
-      type: DataTypes.INTEGER,
-      allowNull:false
-    }
+    
   }, {
     sequelize,
     modelName: 'EstadoMateriaUser',
+    timestamps:false
   });
   return EstadoMateriaUser;
 };
