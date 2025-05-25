@@ -199,6 +199,102 @@ function clearForm() {
   document.getElementById("eventos-container").innerHTML = `<h3>Eventos</h3>`;
 }
 
+function editMateria(id) {
+  editingInscripcionId = id;
+  document.getElementById("modal-title").innerText = "Editar Inscripción";
+  
+  fetch(`/db/materia/${id}`)
+    .then(res => res.json())
+    .then(inscripcion => {
+      // Selecciona la materia en el select
+      const selectMateria = document.getElementById("NombreMateria");
+      if (inscripcion.materia && inscripcion.materia.idMateria) {
+        Array.from(selectMateria.options).forEach(option => {
+          option.selected = (option.value == inscripcion.materia.idMateria);
+        });
+      }
+
+      // Pobla el select de correlativas basándose en la materia actual
+      populateCorrelativas(inscripcion.materia.idMateria);
+      
+      // Rellena los campos globales según los datos del primer evento
+      if (inscripcion.eventos && inscripcion.eventos.length > 0) {
+        const ev = inscripcion.eventos[0];
+        document.getElementById("anioDeCarrera").value = ev.anioDeCarrera || "";
+        document.getElementById("anio").value = ev.anio || "";
+        document.getElementById("horaInicio").value = ev.horaInicio || "";
+        document.getElementById("horaFin").value = ev.horaFin || "";
+        document.getElementById("examen").value = ev.fechaExamen || "";
+        document.getElementById("notaParcial1").value = ev.notaParcial1 || "";
+        document.getElementById("notaParcial2").value = ev.notaParcial2 || "";
+        document.getElementById("notaFinal").value = ev.notaFinal || "";
+        document.getElementById("idModalidad").value = ev.idModalidad || "";
+        
+        // Pobla el select de correlativas con su nombre
+        const correlativasSelect = document.getElementById("correlativasSelect");
+        if (correlativasSelect && ev.correlativas) {
+          Array.from(correlativasSelect.options).forEach(option => {
+            option.selected = (option.text == ev.correlativas);
+          });
+        }
+      }
+      
+      // Rellena los eventos dinámicos existentes
+      const eventosContainer = document.getElementById("eventos-container");
+      eventosContainer.innerHTML = `<h3>Eventos</h3>`;
+      if (inscripcion.eventos && inscripcion.eventos.length > 0) {
+        inscripcion.eventos.forEach(ev => {
+          const eventoDiv = document.createElement("div");
+          eventoDiv.classList.add("evento");
+          eventoDiv.innerHTML = `
+            <label>Tipo:
+              <select class="tipo">
+                <option value="Parcial 1" ${ev.tipo === "Parcial 1" ? "selected" : ""}>Parcial 1</option>
+                <option value="Parcial 2" ${ev.tipo === "Parcial 2" ? "selected" : ""}>Parcial 2</option>
+                <option value="Recuperatorio 1" ${ev.tipo === "Recuperatorio 1" ? "selected" : ""}>Recuperatorio 1</option>
+                <option value="Recuperatorio 2" ${ev.tipo === "Recuperatorio 2" ? "selected" : ""}>Recuperatorio 2</option>
+                <option value="Trabajo Practico" ${ev.tipo === "Trabajo Practico" ? "selected" : ""}>Trabajo Practico</option>
+                <option value="Examen Final" ${ev.tipo === "Examen Final" ? "selected" : ""}>Examen Final</option>
+              </select>
+            </label>
+            <label>Número: <input type="number" class="numero" value="${ev.numero || ''}" placeholder="Número"></label>
+            <label>Temas a Estudiar: <input type="text" class="temasAEstudiar" value="${ev.temasAEstudiar || ''}" placeholder="Temas"></label>
+            <label>Estado:
+              <select class="estado">
+                <option value="Pendiente" ${ev.estado === "Pendiente" ? "selected" : ""}>Pendiente</option>
+                <option value="En curso" ${ev.estado === "En curso" ? "selected" : ""}>En curso</option>
+                <option value="Finalizado" ${ev.estado === "Finalizado" ? "selected" : ""}>Finalizado</option>
+              </select>
+            </label>
+            <label>Día:
+              <select class="dia">
+                <option value="Lunes" ${ev.dia === "Lunes" ? "selected" : ""}>Lunes</option>
+                <option value="Martes" ${ev.dia === "Martes" ? "selected" : ""}>Martes</option>
+                <option value="Miércoles" ${ev.dia === "Miércoles" ? "selected" : ""}>Miércoles</option>
+                <option value="Jueves" ${ev.dia === "Jueves" ? "selected" : ""}>Jueves</option>
+                <option value="Viernes" ${ev.dia === "Viernes" ? "selected" : ""}>Viernes</option>
+                <option value="Sábado" ${ev.dia === "Sábado" ? "selected" : ""}>Sábado</option>
+                <option value="Domingo" ${ev.dia === "Domingo" ? "selected" : ""}>Domingo</option>
+              </select>
+            </label>
+            <label>Hora de Inicio: <input type="time" class="horaInicio" value="${ev.horaInicio || ''}"></label>
+            <label>Hora de Fin: <input type="time" class="horaFin" value="${ev.horaFin || ''}"></label>
+            <label>Fecha de Entrega: <input type="date" class="fechaEntrega" value="${ev.fechaEntrega || ''}" placeholder="Fecha"></label>
+            <button type="button" onclick="eliminarEvento(this)">Eliminar Evento</button>
+          `;
+          eventosContainer.appendChild(eventoDiv);
+        });
+      }
+      
+      openFormModal();
+    })
+    .catch(err => console.error("Error al recuperar la inscripción:", err));
+}
+
+
+
+
+
 // Recolecta los datos del formulario
 function getMateriaFromForm() {
   const selectMateria = document.getElementById("NombreMateria");
