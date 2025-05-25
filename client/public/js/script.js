@@ -195,29 +195,37 @@ function getMateriaFromForm() {
   // Recolecta los eventos agregados dinámicamente
   const eventosDinamicos = [];
   document.querySelectorAll(".evento").forEach(eventoDiv => {
-    const tipo = eventoDiv.querySelector(".tipo").value;
-    const numero = parseInt(eventoDiv.querySelector(".numero").value);
-    const temasAEstudiar = eventoDiv.querySelector(".temasAEstudiar").value;
-    const estado = eventoDiv.querySelector(".estado").value;
-    const fechaEntrega = eventoDiv.querySelector(".fechaEntrega").value;
-    eventosDinamicos.push({ 
-      tipo, 
-      numero, 
-      temasAEstudiar, 
-      estado, 
-      fechaEntrega, 
-      anioDeCarrera, 
-      anio, 
-      horaInicio, 
-      horaFin, 
-      idModalidad, 
-      correlativas, 
-      fechaExamen: examen, 
-      notaParcial1, 
-      notaParcial2, 
-      notaFinal 
-    });
+  const tipo = eventoDiv.querySelector(".tipo").value;
+  const numero = parseInt(eventoDiv.querySelector(".numero").value);
+  const temasAEstudiar = eventoDiv.querySelector(".temasAEstudiar").value;
+  const estado = eventoDiv.querySelector(".estado").value;
+  const fechaEntrega = eventoDiv.querySelector(".fechaEntrega").value;
+  // Si el bloque dinámico tiene su propio "dia" y las horas:
+  const dia = eventoDiv.querySelector(".dia") ? eventoDiv.querySelector(".dia").value : document.getElementById("dia").value;
+  const horaInicio_evento = eventoDiv.querySelector(".horaInicio") ? eventoDiv.querySelector(".horaInicio").value : document.getElementById("horaInicio").value;
+  const horaFin_evento = eventoDiv.querySelector(".horaFin") ? eventoDiv.querySelector(".horaFin").value : document.getElementById("horaFin").value;
+  
+  eventosDinamicos.push({ 
+    tipo, 
+    numero, 
+    temasAEstudiar, 
+    estado, 
+    fechaEntrega, 
+    anioDeCarrera, 
+    anio, 
+    horaInicio: horaInicio_evento, 
+    horaFin: horaFin_evento, 
+    idModalidad, 
+    correlativas, 
+    fechaExamen: examen, 
+    notaParcial1, 
+    notaParcial2, 
+    notaFinal,
+    dia
   });
+});
+
+
   
   // Si no se agregaron eventos dinámicos, crea uno usando los valores globales
   const eventos = eventosDinamicos.length > 0 ? eventosDinamicos : [{
@@ -334,11 +342,26 @@ function agregarEvento() {
         <option value="Finalizado">Finalizado</option>
       </select>
     </label>
+    <label>Día: 
+      <select class="dia">
+        <option value="Lunes">Lunes</option>
+        <option value="Martes">Martes</option>
+        <option value="Miércoles">Miércoles</option>
+        <option value="Jueves">Jueves</option>
+        <option value="Viernes">Viernes</option>
+        <option value="Sábado">Sábado</option>
+        <option value="Domingo">Domingo</option>
+      </select>
+    </label>
+    <label>Hora de Inicio: <input type="time" class="horaInicio"></label>
+    <label>Hora de Fin: <input type="time" class="horaFin"></label>
     <label>Fecha de Entrega: <input type="date" class="fechaEntrega"></label>
     <button type="button" onclick="eliminarEvento(this)">Eliminar Evento</button>
   `;
   eventosContainer.appendChild(eventoDiv);
 }
+
+
 
 function eliminarEvento(button) {
   button.parentElement.remove();
@@ -353,17 +376,24 @@ function showDetails(id) {
         <p><strong>Materia:</strong> ${inscripcion.materia?.NombreMateria || "N/A"}</p>
         <p><strong>ID de inscripción:</strong> ${inscripcion.idMateriaUsuario}</p>
       `;
+
       if (inscripcion.eventos && inscripcion.eventos.length > 0) {
-        const ev = inscripcion.eventos[0];
-        detailsContent.innerHTML += `
-          <p><strong>Año de Carrera (Evento):</strong> ${ev.anioDeCarrera || ""}</p>
-          <p><strong>Año (Evento):</strong> ${ev.anio || ""}</p>
-          <p><strong>Horario (Evento):</strong> ${ev.horaInicio || ""} - ${ev.horaFin || ""}</p>
-          <p><strong>Modalidad (Evento):</strong> ${(ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)) ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : ""}</p>
-          <p><strong>Correlativas (Evento):</strong> ${ev.correlativas || ""}</p>
-          <p><strong>Fecha de Examen:</strong> ${ev.fechaExamen || ""}</p>
-          <p><strong>Notas:</strong> P1: ${ev.notaParcial1 || "N/A"}, P2: ${ev.notaParcial2 || "N/A"}, Final: ${ev.notaFinal || "N/A"}</p>
-        `;
+        inscripcion.eventos.forEach((ev, index) => {
+          detailsContent.innerHTML += `
+            <h4>Evento ${index + 1}</h4>
+            <p><strong>Tipo:</strong> ${ev.tipo || ""}</p>
+            <p><strong>Día:</strong> ${ev.dia || ""}</p>
+            <p><strong>Hora de Inicio:</strong> ${ev.horaInicio || ""}</p>
+            <p><strong>Hora de Fin:</strong> ${ev.horaFin || ""}</p>
+            <p><strong>Año de Carrera (Evento):</strong> ${ev.anioDeCarrera || ""}</p>
+            <p><strong>Año (Evento):</strong> ${ev.anio || ""}</p>
+            <p><strong>Modalidad (Evento):</strong> ${(ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)) ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : ""}</p>
+            <p><strong>Correlativas (Evento):</strong> ${ev.correlativas || ""}</p>
+            <p><strong>Fecha de Examen:</strong> ${ev.fechaExamen || ""}</p>
+            <p><strong>Notas:</strong> P1: ${ev.notaParcial1 || "N/A"}, P2: ${ev.notaParcial2 || "N/A"}, Final: ${ev.notaFinal || "N/A"}</p>
+            <hr>
+          `;
+        });
       } else {
         detailsContent.innerHTML += `<p><strong>Eventos:</strong> N/A</p>`;
       }
@@ -371,6 +401,7 @@ function showDetails(id) {
     })
     .catch(err => console.error(err));
 }
+
 
 function closeDetailsModal() {
   document.getElementById("details-modal").style.display = "none";

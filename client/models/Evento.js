@@ -1,3 +1,4 @@
+// models/Evento.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../Data/db");
 
@@ -54,6 +55,27 @@ const Evento = sequelize.define("Evento", {
   idMateriaUsuario: {
     type: DataTypes.INTEGER,
     allowNull: false,
+  },
+  // Campos adicionales para la información dinámica
+  numero: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  temasAEstudiar: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  estado: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  fechaEntrega: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
+  dia: {
+    type: DataTypes.STRING,
+    allowNull: true,
   }
 }, {
   tableName: "eventos",
