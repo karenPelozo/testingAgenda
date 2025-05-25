@@ -66,9 +66,9 @@ function populateModalidadesSelect() {
         select.innerHTML = `<option value="">-- Seleccione una Modalidad --</option>`;
         data.forEach(mod => {
           const option = document.createElement("option");
-          // Se usa el idModalidad como value
+          // Si tu modelo Modalidad define "tipoModalidad", posiblemente debas usar mod.tipoModalidad en lugar de mod.Nombre.
           option.value = mod.idModalidad;
-          option.text = mod.Nombre;
+          option.text = mod.Nombre || mod.tipoModalidad; 
           select.appendChild(option);
         });
       }
@@ -103,21 +103,22 @@ function renderMaterias(inscripciones) {
 
   inscripciones.forEach(insc => {
     const materiaNombre = insc.materia?.NombreMateria || "N/A";
-    // De los eventos tomamos el primero
+
     let anioDeCarrera = "";
     let anio = "";
-    let horas = ""; // Aquí almacenaremos horaInicio y horaFin en dos líneas.
+    let horas = ""; // Se mostrará horaInicio y horaFin en dos líneas.
     let modalidad = "";
     let correlativas = "";
     let fechaExamen = "";
     let notas = "";
+    
     if (insc.eventos && insc.eventos.length > 0) {
       const ev = insc.eventos[0];
       anioDeCarrera = ev.anioDeCarrera || "";
       anio = ev.anio || "";
-      // Construimos la visualización del horario: horaInicio + <br> + horaFin
+      // Mostrar las horas en dos líneas
       horas = `${ev.horaInicio || ""}<br>${ev.horaFin || ""}`;
-      modalidad = (ev.modalidad && ev.modalidad.Nombre) ? ev.modalidad.Nombre : "";
+      modalidad = (ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)) ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : "";
       correlativas = ev.correlativas || "";
       fechaExamen = ev.fechaExamen || "";
       notas = `P1: ${ev.notaParcial1 !== undefined ? ev.notaParcial1 : "N/A"}, P2: ${ev.notaParcial2 !== undefined ? ev.notaParcial2 : "N/A"}, Final: ${ev.notaFinal !== undefined ? ev.notaFinal : "N/A"}`;
@@ -142,7 +143,6 @@ function renderMaterias(inscripciones) {
     tbody.appendChild(tr);
   });
 }
-
 
 // Función para abrir el modal del formulario
 function openFormModal() {
@@ -174,10 +174,14 @@ function getMateriaFromForm() {
   const selectMateria = document.getElementById("NombreMateria");
   const NombreMateria = selectMateria.value;
   
-  // Obtiene los campos globales que usás para llenar el evento
+  // Obtiene los campos globales que se usarán para los eventos
   const anioDeCarrera = document.getElementById("anioDeCarrera") ? document.getElementById("anioDeCarrera").value : "";
   const anio = document.getElementById("anio") ? document.getElementById("anio").value : "";
-  const horario = document.getElementById("horario") ? document.getElementById("horario").value : "";
+  
+  // Extraer los valores de horaInicio y horaFin
+  const horaInicio = document.getElementById("horaInicio") ? document.getElementById("horaInicio").value : "";
+  const horaFin = document.getElementById("horaFin") ? document.getElementById("horaFin").value : "";
+  
   const examen = document.getElementById("examen") ? document.getElementById("examen").value : "";
   const notaParcial1 = document.getElementById("notaParcial1") ? document.getElementById("notaParcial1").value : "";
   const notaParcial2 = document.getElementById("notaParcial2") ? document.getElementById("notaParcial2").value : "";
@@ -204,7 +208,8 @@ function getMateriaFromForm() {
       fechaEntrega, 
       anioDeCarrera, 
       anio, 
-      horario, 
+      horaInicio, 
+      horaFin, 
       idModalidad, 
       correlativas, 
       fechaExamen: examen, 
@@ -223,7 +228,8 @@ function getMateriaFromForm() {
     fechaEntrega: "",
     anioDeCarrera,
     anio,
-    horario,
+    horaInicio,
+    horaFin,
     idModalidad,
     correlativas,
     fechaExamen: examen,
@@ -231,14 +237,13 @@ function getMateriaFromForm() {
     notaParcial2,
     notaFinal
   }];
-
+  
   return {
     NombreMateria,
     eventos,
     idUsuario: loggedUserId
   };
 }
-
 
 // Función para guardar (POST o PUT según corresponda)
 function saveMateria() {
@@ -353,8 +358,8 @@ function showDetails(id) {
         detailsContent.innerHTML += `
           <p><strong>Año de Carrera (Evento):</strong> ${ev.anioDeCarrera || ""}</p>
           <p><strong>Año (Evento):</strong> ${ev.anio || ""}</p>
-          <p><strong>Horario (Evento):</strong> ${ev.horario || ""}</p>
-          <p><strong>Modalidad (Evento):</strong> ${ev.modalidad && ev.modalidad.Nombre ? ev.modalidad.Nombre : ""}</p>
+          <p><strong>Horario (Evento):</strong> ${ev.horaInicio || ""} - ${ev.horaFin || ""}</p>
+          <p><strong>Modalidad (Evento):</strong> ${(ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)) ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : ""}</p>
           <p><strong>Correlativas (Evento):</strong> ${ev.correlativas || ""}</p>
           <p><strong>Fecha de Examen:</strong> ${ev.fechaExamen || ""}</p>
           <p><strong>Notas:</strong> P1: ${ev.notaParcial1 || "N/A"}, P2: ${ev.notaParcial2 || "N/A"}, Final: ${ev.notaFinal || "N/A"}</p>
@@ -430,15 +435,18 @@ function editMateria(id) {
           option.selected = (option.value === inscripcion.materia.NombreMateria);
         });
       }
-      // Rellena los campos globales (si están en el formulario) según los datos del primer evento
+      // Rellena los campos globales según los datos del primer evento
       if (inscripcion.eventos && inscripcion.eventos.length > 0) {
         const ev = inscripcion.eventos[0];
         if (document.getElementById("anioDeCarrera"))
           document.getElementById("anioDeCarrera").value = ev.anioDeCarrera || "";
         if (document.getElementById("anio"))
           document.getElementById("anio").value = ev.anio || "";
-        if (document.getElementById("horario"))
-          document.getElementById("horario").value = ev.horario || "";
+        // En vez de "horario", se asignan horaInicio y horaFin
+        if (document.getElementById("horaInicio"))
+          document.getElementById("horaInicio").value = ev.horaInicio || "";
+        if (document.getElementById("horaFin"))
+          document.getElementById("horaFin").value = ev.horaFin || "";
         if (document.getElementById("examen"))
           document.getElementById("examen").value = ev.fechaExamen || "";
         if (document.getElementById("notaParcial1"))
@@ -449,7 +457,7 @@ function editMateria(id) {
           document.getElementById("notaFinal").value = ev.notaFinal || "";
         if (document.getElementById("correlativas"))
           document.getElementById("correlativas").value = ev.correlativas || "";
-        // Selecciona la modalidad global en el select si existe modalidad en el evento
+        // Selecciona la modalidad si existe
         if (document.getElementById("idModalidad") && ev.modalidad && ev.modalidad.idModalidad) {
           document.getElementById("idModalidad").value = ev.modalidad.idModalidad;
         }
@@ -492,3 +500,4 @@ function editMateria(id) {
     })
     .catch(err => console.error(err));
 }
+

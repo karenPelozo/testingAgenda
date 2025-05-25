@@ -6,7 +6,8 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body style="background-image: url('img/banner_colorido.png'); background-size: cover; background-repeat: no-repeat; background-position: center center; background-attachment: fixed;">
-  
+
+  <!-- Modal de login -->
   <div id="login-modal">
     <form id="login-form" onsubmit="login(); return false;">
       <div id="login-modal-content">
@@ -17,7 +18,8 @@
       </div>
     </form>
   </div>
-  
+
+  <!-- Encabezado -->
   <div class="header-container">
     <h1>Agenda de Materias</h1>
     <span id="btnInfo" onclick="showInfo()" title="Acerca de mí">
@@ -26,9 +28,10 @@
       </svg>
     </span>
   </div>
-  
+
   <img src="img/leyendo.png" alt="Logo" class="icon-left">
-  
+
+  <!-- Tabla de materias -->
   <table id="materiasTable">
     <thead>
       <tr>
@@ -49,31 +52,35 @@
   <div class="button-wrapper">
     <button id="btnOpenForm">Nuevo</button>
   </div>
-  
+
   <!-- Modal para el formulario de alta/edición -->
   <div id="form-modal">
     <div id="form-modal-content">
       <h2 id="modal-title">Nuevo Registro</h2>
       
+      <!-- Selección de Materia (tabla global: solo NombreMateria) -->
       <label for="NombreMateria">Materia:</label>
-      <!-- Se reemplaza el input por un select para mostrar el listado de materias globales -->
       <select id="NombreMateria">
-        <!-- Se poblará dinámicamente mediante script.js -->
         <option value="">-- Seleccione una Materia --</option>
       </select>
       
+      <!-- Campos para datos que se guardarán en Evento -->
       <label for="anioDeCarrera">Año de Carrera:</label>
       <input type="number" id="anioDeCarrera" placeholder="Año de Carrera">
       
       <label for="anio">Año:</label>
       <input type="text" id="anio" placeholder="Año">
-      
-      <label for="modalidad">Modalidad:</label>
-      <select id="idModalidad"> </select>
+
+      <!-- Selección de Modalidad -->
+      <label for="idModalidad">Modalidad:</label>
+      <select id="idModalidad">
+        <option value="">-- Seleccione una Modalidad --</option>
+      </select>
       
       <label for="correlativas">Correlativas (separadas por coma):</label>
       <input type="text" id="correlativas" placeholder="Ej: Matemática I, Física I">
 
+      <!-- Bloque de Horario -->
       <h3>Horario</h3>
       <label for="dia">Día:</label>
       <select id="dia">
@@ -95,6 +102,7 @@
       <label for="examen">Fecha de Examen (opcional):</label>
       <input type="date" id="examen">
       
+      <!-- Bloque de Notas -->
       <h3>Notas</h3>
       <label for="notaParcial1">Nota Parcial 1:</label>
       <input type="number" id="notaParcial1" placeholder="Nota Parcial 1">
@@ -105,6 +113,7 @@
       <label for="notaFinal">Nota Final:</label>
       <input type="number" id="notaFinal" placeholder="Nota Final">
       
+      <!-- Contenedor para eventos dinámicos (opcional para cada evento adicional) -->
       <div id="eventos-container">
         <h3>Eventos</h3>
       </div>
@@ -116,7 +125,8 @@
       </div>
     </div>
   </div>
-  
+
+  <!-- Modal para ver detalles -->
   <div id="details-modal">
     <div id="details-modal-content">
       <button class="close" onclick="closeDetailsModal()">×</button>
@@ -124,7 +134,7 @@
       <div id="details-content"></div>
     </div>
   </div>
-  
+
   <script src="js/script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>

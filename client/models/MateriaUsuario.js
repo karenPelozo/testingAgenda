@@ -1,4 +1,3 @@
-// models/MateriaUsuario.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../Data/db");
 
@@ -15,7 +14,7 @@ const MateriaUsuario = sequelize.define("MateriaUsuario", {
   idUsuario: {
     type: DataTypes.INTEGER,
     allowNull: false,
-  },
+  }
 }, {
   tableName: "materias_usuarios",
   timestamps: false,

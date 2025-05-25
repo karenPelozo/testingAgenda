@@ -81,20 +81,18 @@ app.post("/db/materia", async (req, res) => {
         "NombreMateria": "Matemática 1",
         "eventos": [
           {
-            "tipo": "Parcial 1",
+            "tipo": "Examen 1",
             "anioDeCarrera": 1,
             "anio": 2025,
-            "horario": "Lunes 8:00 - 12:00",
-            "modalidad": "Presencial",  // Se recibirá mediante el select en el formulario, pero se guarda en Evento
+            "dia": "Lunes",
+            "horaInicio": "09:00",
+            "horaFin": "11:00",
             "correlativas": "Matemática Básica, Física 1",
             "fechaExamen": "2025-06-15",
             "notaParcial1": 8.5,
             "notaParcial2": 7.0,
-            "notaFinal": 9.0,
-            "dia": "Lunes",
-            "horaInicio": "08:00",
-            "horaFin": "10:00",
-            "idModalidad": 1     // Este valor se obtiene del select de modalidades
+            "notaFinal": 8.75,
+            "idModalidad": 1
           }
           // Se pueden incluir más eventos
         ],
@@ -106,7 +104,7 @@ app.post("/db/materia", async (req, res) => {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // Buscar o crear la materia global. La tabla Materia tiene solo NombreMateria.
+    // Buscar o crear la materia global (la tabla Materia tiene sólo NombreMateria)
     let materia = await Materia.findOne({ where: { NombreMateria } });
     if (!materia) {
       materia = await Materia.create({ NombreMateria });
@@ -118,29 +116,29 @@ app.post("/db/materia", async (req, res) => {
       idUsuario
     });
     
-    // Crear cada uno de los eventos (con todos los atributos) asociados a esta inscripción
+    // Crear cada uno de los eventos asociados a esta inscripción
     if (eventos && Array.isArray(eventos)) {
       for (const evt of eventos) {
         await Evento.create({
           tipo: evt.tipo,
           anioDeCarrera: evt.anioDeCarrera,
           anio: evt.anio,
-          horario: evt.horario,
+          // Eliminamos "horario" y usamos horaInicio y horaFin
+          horaInicio: evt.horaInicio,
+          horaFin: evt.horaFin,
           correlativas: evt.correlativas,
           fechaExamen: evt.fechaExamen,
           notaParcial1: evt.notaParcial1,
           notaParcial2: evt.notaParcial2,
           notaFinal: evt.notaFinal,
           dia: evt.dia,
-          horaInicio: evt.horaInicio,
-          horaFin: evt.horaFin,
           idModalidad: evt.idModalidad,
           idMateriaUsuario: inscripcion.idMateriaUsuario
         });
       }
     }
     
-    // Recupera la inscripción completa (con joins a Materia y a los Eventos, que a su vez incluyen la Modalidad)
+    // Recupera la inscripción completa (un join con Materia y los Eventos, que incluyen Modalidad)
     const inscripcionCompleta = await MateriaUsuario.findOne({
       where: { idMateriaUsuario: inscripcion.idMateriaUsuario },
       include: [
@@ -176,7 +174,7 @@ app.get("/db/materias", async (req, res) => {
   }
 });
 
-// GET: Obtener una inscripción en particular (con sus eventos) por el ID de la inscripción
+// GET: Obtener una inscripción (con sus eventos) por el ID de la inscripción
 app.get("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -207,16 +205,16 @@ app.put("/db/materia/:id", async (req, res) => {
     
     const { NombreMateria, eventos, idUsuario } = req.body;
     
-    // Actualiza la materia global asociada (solo el nombre)
+    // Actualizar la materia global asociada (solo el nombre)
     let materia = await Materia.findOne({ where: { idMateria: inscripcion.idMateria } });
     if (NombreMateria) {
       await materia.update({ NombreMateria });
     }
     
-    // Actualiza la inscripción de usuario
+    // Actualiza la inscripción (por ejemplo, el idUsuario)
     await inscripcion.update({ idUsuario });
     
-    // Actualiza los eventos: elimina los existentes y crea los nuevos
+    // Actualizar los eventos: se eliminan los existentes y se crean los nuevos
     if (eventos && Array.isArray(eventos)) {
       await Evento.destroy({ where: { idMateriaUsuario: id } });
       for (const evt of eventos) {
@@ -224,15 +222,15 @@ app.put("/db/materia/:id", async (req, res) => {
           tipo: evt.tipo,
           anioDeCarrera: evt.anioDeCarrera,
           anio: evt.anio,
-          horario: evt.horario,
+          // Usamos horaInicio y horaFin en lugar de "horario"
+          horaInicio: evt.horaInicio,
+          horaFin: evt.horaFin,
           correlativas: evt.correlativas,
           fechaExamen: evt.fechaExamen,
           notaParcial1: evt.notaParcial1,
           notaParcial2: evt.notaParcial2,
           notaFinal: evt.notaFinal,
           dia: evt.dia,
-          horaInicio: evt.horaInicio,
-          horaFin: evt.horaFin,
           idModalidad: evt.idModalidad,
           idMateriaUsuario: id
         });
@@ -311,14 +309,15 @@ app.get("/db/modalidades", async (req, res) => {
   }
 });
 
-// POST: Crear una modalidad (por ejemplo Presencial, Virtual, Híbrido)
+// POST: Crear una modalidad (por ejemplo, Presencial, Virtual, Híbrido)
+// Se asume que el modelo Modalidad utiliza la columna "tipoModalidad"
 app.post("/db/modalidades", async (req, res) => {
   try {
-    const { Nombre } = req.body;
-    if (!Nombre) {
-      return res.status(400).json({ error: "El campo Nombre es obligatorio" });
+    const { tipoModalidad } = req.body;
+    if (!tipoModalidad) {
+      return res.status(400).json({ error: "El campo tipoModalidad es obligatorio" });
     }
-    const modalidad = await Modalidad.create({ Nombre });
+    const modalidad = await Modalidad.create({ tipoModalidad });
     res.status(201).json(modalidad);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -326,7 +325,6 @@ app.post("/db/modalidades", async (req, res) => {
 });
 
 // Sincronización de la base de datos y arranque del servidor
-// Sincronización de la base de datos y arranque del servidor  
 sequelize.sync()
   .then(() => {
     console.log("Base de datos y tablas creadas correctamente.");

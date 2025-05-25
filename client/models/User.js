@@ -1,16 +1,16 @@
-// client/models/User.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('../Data/db');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../Data/db");
 
-const User = sequelize.define('User', {
-  id: {
+const User = sequelize.define("User", {
+  id: {  // La clave primaria del usuario
     type: DataTypes.INTEGER,
-    autoIncrement: true,
     primaryKey: true,
+    autoIncrement: true,
   },
   nombre: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true
   },
   password: {
     type: DataTypes.STRING,
@@ -19,9 +19,9 @@ const User = sequelize.define('User', {
   rol: {
     type: DataTypes.STRING,
     allowNull: false,
-  },
+  }
 }, {
-  tableName: 'usuarios',
+  tableName: "usuarios",
   timestamps: false,
 });
 

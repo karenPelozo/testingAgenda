@@ -1,4 +1,3 @@
-// models/Evento.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../Data/db");
 
@@ -20,8 +19,12 @@ const Evento = sequelize.define("Evento", {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
-  horario: {
-    type: DataTypes.STRING,
+  horaInicio: {
+    type: DataTypes.TIME,
+    allowNull: true,
+  },
+  horaFin: {
+    type: DataTypes.TIME,
     allowNull: true,
   },
   correlativas: {

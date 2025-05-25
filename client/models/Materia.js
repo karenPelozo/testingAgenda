@@ -1,4 +1,3 @@
-// models/Materia.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../Data/db");
 
