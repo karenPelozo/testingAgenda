@@ -102,12 +102,11 @@ function renderMaterias(inscripciones) {
   tbody.innerHTML = "";
 
   inscripciones.forEach(insc => {
-    // La tabla Materia solo tiene NombreMateria (global)
     const materiaNombre = insc.materia?.NombreMateria || "N/A";
-    // Los atributos adicionales se guardan en el registro Evento (usaremos el primer evento)
+    // De los eventos tomamos el primero
     let anioDeCarrera = "";
     let anio = "";
-    let horario = "";
+    let horas = ""; // Aquí almacenaremos horaInicio y horaFin en dos líneas.
     let modalidad = "";
     let correlativas = "";
     let fechaExamen = "";
@@ -116,8 +115,9 @@ function renderMaterias(inscripciones) {
       const ev = insc.eventos[0];
       anioDeCarrera = ev.anioDeCarrera || "";
       anio = ev.anio || "";
-      horario = ev.horario || "";
-      modalidad = ev.modalidad ? (ev.modalidad.Nombre || "") : "";
+      // Construimos la visualización del horario: horaInicio + <br> + horaFin
+      horas = `${ev.horaInicio || ""}<br>${ev.horaFin || ""}`;
+      modalidad = (ev.modalidad && ev.modalidad.Nombre) ? ev.modalidad.Nombre : "";
       correlativas = ev.correlativas || "";
       fechaExamen = ev.fechaExamen || "";
       notas = `P1: ${ev.notaParcial1 !== undefined ? ev.notaParcial1 : "N/A"}, P2: ${ev.notaParcial2 !== undefined ? ev.notaParcial2 : "N/A"}, Final: ${ev.notaFinal !== undefined ? ev.notaFinal : "N/A"}`;
@@ -128,7 +128,7 @@ function renderMaterias(inscripciones) {
       <td>${materiaNombre}</td>
       <td>${anioDeCarrera}</td>
       <td>${anio}</td>
-      <td>${horario}</td>
+      <td>${horas}</td>
       <td>${modalidad}</td>
       <td>${correlativas}</td>
       <td>${fechaExamen}</td>
@@ -142,6 +142,7 @@ function renderMaterias(inscripciones) {
     tbody.appendChild(tr);
   });
 }
+
 
 // Función para abrir el modal del formulario
 function openFormModal() {
@@ -169,11 +170,11 @@ function clearForm() {
 
 // Función para obtener los datos del formulario
 function getMateriaFromForm() {
-  // Obtiene el valor del select de materia (global)
+  // Obtiene el valor del select de materias
   const selectMateria = document.getElementById("NombreMateria");
   const NombreMateria = selectMateria.value;
   
-  // Obtiene los campos globales que se usan para llenar los registros en Evento
+  // Obtiene los campos globales que usás para llenar el evento
   const anioDeCarrera = document.getElementById("anioDeCarrera") ? document.getElementById("anioDeCarrera").value : "";
   const anio = document.getElementById("anio") ? document.getElementById("anio").value : "";
   const horario = document.getElementById("horario") ? document.getElementById("horario").value : "";
@@ -183,10 +184,10 @@ function getMateriaFromForm() {
   const notaFinal = document.getElementById("notaFinal") ? document.getElementById("notaFinal").value : "";
   const correlativas = document.getElementById("correlativas") ? document.getElementById("correlativas").value : "";
   
-  // Obtiene el valor del select de modalidades (global)
+  // Obtiene el valor del select de modalidades
   const selectModalidad = document.getElementById("idModalidad");
   const idModalidad = selectModalidad ? parseInt(selectModalidad.value) : null;
-
+  
   // Recolecta los eventos agregados dinámicamente
   const eventosDinamicos = [];
   document.querySelectorAll(".evento").forEach(eventoDiv => {
@@ -195,7 +196,6 @@ function getMateriaFromForm() {
     const temasAEstudiar = eventoDiv.querySelector(".temasAEstudiar").value;
     const estado = eventoDiv.querySelector(".estado").value;
     const fechaEntrega = eventoDiv.querySelector(".fechaEntrega").value;
-    // Cada evento dinamicó también hereda los valores globales
     eventosDinamicos.push({ 
       tipo, 
       numero, 
@@ -205,7 +205,7 @@ function getMateriaFromForm() {
       anioDeCarrera, 
       anio, 
       horario, 
-      modalidad: idModalidad,  // guardamos el idModalidad
+      idModalidad, 
       correlativas, 
       fechaExamen: examen, 
       notaParcial1, 
@@ -224,7 +224,7 @@ function getMateriaFromForm() {
     anioDeCarrera,
     anio,
     horario,
-    modalidad: idModalidad,
+    idModalidad,
     correlativas,
     fechaExamen: examen,
     notaParcial1,
@@ -238,6 +238,7 @@ function getMateriaFromForm() {
     idUsuario: loggedUserId
   };
 }
+
 
 // Función para guardar (POST o PUT según corresponda)
 function saveMateria() {

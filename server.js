@@ -326,12 +326,12 @@ app.post("/db/modalidades", async (req, res) => {
 });
 
 // Sincronización de la base de datos y arranque del servidor
-sequelize.sync({ alter: true })
+// Sincronización de la base de datos y arranque del servidor  
+sequelize.sync()
   .then(() => {
-    console.log("Base de datos y tablas actualizadas correctamente.");
+    console.log("Base de datos y tablas creadas correctamente.");
     app.listen(port, () => console.log(`Servidor corriendo en http://localhost:${port}`));
   })
   .catch((error) => {
     console.error("Error al sincronizar la base de datos:", error);
   });
-
