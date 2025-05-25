@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadMaterias();
   }
 
-  // Cuando se selecciona una materia, actualizamos el select de correlativas
+  // Cuando se selecciona una materia, se actualiza el select de correlativas
   const selectMateria = document.getElementById("NombreMateria");
   if (selectMateria) {
     selectMateria.addEventListener("change", () => {
@@ -178,14 +178,14 @@ function openFormModal() {
   document.getElementById("form-modal").style.display = "flex";
 }
 
-// Cierra el modal y limpia los campos
+// Cierra el modal del formulario y limpia el formulario
 function closeFormModal() {
   document.getElementById("form-modal").style.display = "none";
   clearForm();
   editingInscripcionId = null;
 }
 
-// Limpia el formulario
+// Limpia los campos del formulario
 function clearForm() {
   document.getElementById("NombreMateria").selectedIndex = 0;
   const selectModalidad = document.getElementById("idModalidad");
@@ -202,7 +202,7 @@ function clearForm() {
 // Recolecta los datos del formulario
 function getMateriaFromForm() {
   const selectMateria = document.getElementById("NombreMateria");
-  // Obtenemos el valor (id) y además el texto (NombreMateria) de la opción seleccionada
+  // Obtiene el id y además el NombreMateria del option seleccionado
   const idMateria = selectMateria.value;
   const NombreMateria = selectMateria.options[selectMateria.selectedIndex].text;
 
@@ -217,9 +217,12 @@ function getMateriaFromForm() {
   const notaParcial2 = document.getElementById("notaParcial2") ? document.getElementById("notaParcial2").value : "";
   const notaFinal = document.getElementById("notaFinal") ? document.getElementById("notaFinal").value : "";
   
-  // Se toma el valor del select de correlativas (se envía el id de la correlativa seleccionada)
+  // Se obtiene el texto del select de correlativas (para que se guarde el nombre)
   const correlativasSelect = document.getElementById("correlativasSelect");
-  const correlativa = correlativasSelect ? correlativasSelect.value : "";
+  let correlativa = "";
+  if (correlativasSelect) {
+    correlativa = correlativasSelect.options[correlativasSelect.selectedIndex].text;
+  }
   
   const selectModalidad = document.getElementById("idModalidad");
   const idModalidad = selectModalidad ? parseInt(selectModalidad.value) : null;
@@ -278,9 +281,9 @@ function getMateriaFromForm() {
   }];
   
   return {
-    // Se envía "NombreMateria" (texto) para cumplir con el backend
+    // Enviamos también el nombre de la materia junto con el id para que el backend realice el join
     NombreMateria,
-    idMateria, // adicional para uso interno si se requiere
+    idMateria,
     eventos,
     idUsuario: loggedUserId
   };
@@ -394,7 +397,7 @@ function agregarEvento() {
   eventosContainer.appendChild(eventoDiv);
 }
 
-// Elimina el bloque de evento dinámico
+// Elimina un bloque de evento dinámico
 function eliminarEvento(button) {
   button.parentElement.remove();
 }
