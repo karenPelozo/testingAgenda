@@ -178,9 +178,9 @@ function getMateriaFromForm() {
   const anioDeCarrera = document.getElementById("anioDeCarrera") ? document.getElementById("anioDeCarrera").value : "";
   const anio = document.getElementById("anio") ? document.getElementById("anio").value : "";
   
-  // Extraer los valores de horaInicio y horaFin
-  const horaInicio = document.getElementById("horaInicio") ? document.getElementById("horaInicio").value : "";
-  const horaFin = document.getElementById("horaFin") ? document.getElementById("horaFin").value : "";
+  // Extraer los valores globales de horaInicio y horaFin (en caso de usarlos si el bloque dinámico no los tiene)
+  const globalHoraInicio = document.getElementById("horaInicio") ? document.getElementById("horaInicio").value : "";
+  const globalHoraFin = document.getElementById("horaFin") ? document.getElementById("horaFin").value : "";
   
   const examen = document.getElementById("examen") ? document.getElementById("examen").value : "";
   const notaParcial1 = document.getElementById("notaParcial1") ? document.getElementById("notaParcial1").value : "";
@@ -195,39 +195,39 @@ function getMateriaFromForm() {
   // Recolecta los eventos agregados dinámicamente
   const eventosDinamicos = [];
   document.querySelectorAll(".evento").forEach(eventoDiv => {
-  const tipo = eventoDiv.querySelector(".tipo").value;
-  const numero = parseInt(eventoDiv.querySelector(".numero").value);
-  const temasAEstudiar = eventoDiv.querySelector(".temasAEstudiar").value;
-  const estado = eventoDiv.querySelector(".estado").value;
-  const fechaEntrega = eventoDiv.querySelector(".fechaEntrega").value;
-  // Si el bloque dinámico tiene su propio "dia" y las horas:
-  const dia = eventoDiv.querySelector(".dia") ? eventoDiv.querySelector(".dia").value : document.getElementById("dia").value;
-  const horaInicio_evento = eventoDiv.querySelector(".horaInicio") ? eventoDiv.querySelector(".horaInicio").value : document.getElementById("horaInicio").value;
-  const horaFin_evento = eventoDiv.querySelector(".horaFin") ? eventoDiv.querySelector(".horaFin").value : document.getElementById("horaFin").value;
-  
-  eventosDinamicos.push({ 
-    tipo, 
-    numero, 
-    temasAEstudiar, 
-    estado, 
-    fechaEntrega, 
-    anioDeCarrera, 
-    anio, 
-    horaInicio: horaInicio_evento, 
-    horaFin: horaFin_evento, 
-    idModalidad, 
-    correlativas, 
-    fechaExamen: examen, 
-    notaParcial1, 
-    notaParcial2, 
-    notaFinal,
-    dia
+    const tipo = eventoDiv.querySelector(".tipo") ? eventoDiv.querySelector(".tipo").value : "";
+    const numeroVal = eventoDiv.querySelector(".numero") ? eventoDiv.querySelector(".numero").value : "";
+    const numero = numeroVal !== "" ? parseInt(numeroVal) : null;
+    const temasAEstudiar = eventoDiv.querySelector(".temasAEstudiar") ? eventoDiv.querySelector(".temasAEstudiar").value : "";
+    const estado = eventoDiv.querySelector(".estado") ? eventoDiv.querySelector(".estado").value : "";
+    const fechaEntrega = eventoDiv.querySelector(".fechaEntrega") ? eventoDiv.querySelector(".fechaEntrega").value : "";
+    const dia = eventoDiv.querySelector(".dia") ? eventoDiv.querySelector(".dia").value : "";
+    // Si el bloque dinámico tiene sus propios horaInicio y horaFin, lo usamos; si no, usamos los globales.
+    const horaInicio_evento = eventoDiv.querySelector(".horaInicio") ? eventoDiv.querySelector(".horaInicio").value : globalHoraInicio;
+    const horaFin_evento = eventoDiv.querySelector(".horaFin") ? eventoDiv.querySelector(".horaFin").value : globalHoraFin;
+    
+    eventosDinamicos.push({ 
+      tipo, 
+      numero, 
+      temasAEstudiar, 
+      estado, 
+      fechaEntrega, 
+      anioDeCarrera, 
+      anio, 
+      horaInicio: horaInicio_evento, 
+      horaFin: horaFin_evento, 
+      idModalidad, 
+      correlativas, 
+      fechaExamen: examen, 
+      notaParcial1, 
+      notaParcial2, 
+      notaFinal,
+      dia
+    });
   });
-});
-
-
   
-  // Si no se agregaron eventos dinámicos, crea uno usando los valores globales
+  console.log("Eventos dinámicos:", eventosDinamicos);
+  
   const eventos = eventosDinamicos.length > 0 ? eventosDinamicos : [{
     tipo: "",
     numero: 0,
@@ -236,14 +236,15 @@ function getMateriaFromForm() {
     fechaEntrega: "",
     anioDeCarrera,
     anio,
-    horaInicio,
-    horaFin,
+    horaInicio: globalHoraInicio,
+    horaFin: globalHoraFin,
     idModalidad,
     correlativas,
     fechaExamen: examen,
     notaParcial1,
     notaParcial2,
-    notaFinal
+    notaFinal,
+    dia: ""
   }];
   
   return {
@@ -361,8 +362,6 @@ function agregarEvento() {
   eventosContainer.appendChild(eventoDiv);
 }
 
-
-
 function eliminarEvento(button) {
   button.parentElement.remove();
 }
@@ -401,7 +400,6 @@ function showDetails(id) {
     })
     .catch(err => console.error(err));
 }
-
 
 function closeDetailsModal() {
   document.getElementById("details-modal").style.display = "none";
@@ -473,7 +471,6 @@ function editMateria(id) {
           document.getElementById("anioDeCarrera").value = ev.anioDeCarrera || "";
         if (document.getElementById("anio"))
           document.getElementById("anio").value = ev.anio || "";
-        // En vez de "horario", se asignan horaInicio y horaFin
         if (document.getElementById("horaInicio"))
           document.getElementById("horaInicio").value = ev.horaInicio || "";
         if (document.getElementById("horaFin"))
@@ -488,7 +485,6 @@ function editMateria(id) {
           document.getElementById("notaFinal").value = ev.notaFinal || "";
         if (document.getElementById("correlativas"))
           document.getElementById("correlativas").value = ev.correlativas || "";
-        // Selecciona la modalidad si existe
         if (document.getElementById("idModalidad") && ev.modalidad && ev.modalidad.idModalidad) {
           document.getElementById("idModalidad").value = ev.modalidad.idModalidad;
         }
@@ -512,8 +508,8 @@ function editMateria(id) {
                 <option value="Examen Final" ${ev.tipo === "Examen Final" ? "selected" : ""}>Examen Final</option>
               </select>
             </label>
-            <label>Número: <input type="number" class="numero" value="${ev.numero}" placeholder="Número"></label>
-            <label>Temas a Estudiar: <input type="text" class="temasAEstudiar" value="${ev.temasAEstudiar}" placeholder="Temas"></label>
+            <label>Número: <input type="number" class="numero" value="${ev.numero || ''}" placeholder="Número"></label>
+            <label>Temas a Estudiar: <input type="text" class="temasAEstudiar" value="${ev.temasAEstudiar || ''}" placeholder="Temas"></label>
             <label>Estado:
               <select class="estado">
                 <option value="Pendiente" ${ev.estado === "Pendiente" ? "selected" : ""}>Pendiente</option>
@@ -521,7 +517,20 @@ function editMateria(id) {
                 <option value="Finalizado" ${ev.estado === "Finalizado" ? "selected" : ""}>Finalizado</option>
               </select>
             </label>
-            <label>Fecha de Entrega: <input type="date" class="fechaEntrega" value="${ev.fechaEntrega}" placeholder="Fecha"></label>
+            <label>Día:
+              <select class="dia">
+                <option value="Lunes" ${ev.dia === "Lunes" ? "selected" : ""}>Lunes</option>
+                <option value="Martes" ${ev.dia === "Martes" ? "selected" : ""}>Martes</option>
+                <option value="Miércoles" ${ev.dia === "Miércoles" ? "selected" : ""}>Miércoles</option>
+                <option value="Jueves" ${ev.dia === "Jueves" ? "selected" : ""}>Jueves</option>
+                <option value="Viernes" ${ev.dia === "Viernes" ? "selected" : ""}>Viernes</option>
+                <option value="Sábado" ${ev.dia === "Sábado" ? "selected" : ""}>Sábado</option>
+                <option value="Domingo" ${ev.dia === "Domingo" ? "selected" : ""}>Domingo</option>
+              </select>
+            </label>
+            <label>Hora de Inicio: <input type="time" class="horaInicio" value="${ev.horaInicio || ''}"></label>
+            <label>Hora de Fin: <input type="time" class="horaFin" value="${ev.horaFin || ''}"></label>
+            <label>Fecha de Entrega: <input type="date" class="fechaEntrega" value="${ev.fechaEntrega || ''}" placeholder="Fecha"></label>
             <button type="button" onclick="eliminarEvento(this)">Eliminar Evento</button>
           `;
           eventosContainer.appendChild(eventoDiv);
@@ -531,4 +540,3 @@ function editMateria(id) {
     })
     .catch(err => console.error(err));
 }
-
