@@ -195,26 +195,35 @@ app.get("/db/materia/:id", async (req, res) => {
 });
 
 // PUT: Actualizar una inscripción y sus eventos
+// PUT: Actualizar una inscripción y sus eventos.
 app.put("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const inscripcion = await MateriaUsuario.findByPk(id);
+    // Incluir la materia actual en la consulta para comparar el nombre
+    const inscripcion = await MateriaUsuario.findByPk(id, {
+      include: [{ model: Materia, as: "materia" }]
+    });
     if (!inscripcion) {
       return res.status(404).json({ error: "Inscripción no encontrada" });
     }
     
     const { NombreMateria, eventos, idUsuario } = req.body;
     
-    // Actualizar la materia global asociada (solo el nombre)
-    let materia = await Materia.findOne({ where: { idMateria: inscripcion.idMateria } });
-    if (NombreMateria) {
-      await materia.update({ NombreMateria });
+    // Si se ingresó un nuevo NombreMateria distinto del que ya tiene la inscripción,
+    // buscamos (o creamos) la materia sin modificar la existente.
+    if (NombreMateria && inscripcion.materia.NombreMateria !== NombreMateria) {
+      let materiaNueva = await Materia.findOne({ where: { NombreMateria } });
+      if (!materiaNueva) {
+        materiaNueva = await Materia.create({ NombreMateria });
+      }
+      // Actualizamos la inscripción para que apunte al registro de "Algebra" (o el nuevo nombre)
+      await inscripcion.update({ idUsuario, idMateria: materiaNueva.idMateria });
+    } else {
+      // Si el nombre no ha cambiado, solo actualizamos el idUsuario (en caso de ser necesario)
+      await inscripcion.update({ idUsuario });
     }
     
-    // Actualiza la inscripción (por ejemplo, el idUsuario)
-    await inscripcion.update({ idUsuario });
-    
-    // Actualizar los eventos: se eliminan los existentes y se crean los nuevos
+    // Actualizar los eventos: eliminamos los existentes y creamos los nuevos
     if (eventos && Array.isArray(eventos)) {
       await Evento.destroy({ where: { idMateriaUsuario: id } });
       for (const evt of eventos) {
@@ -222,7 +231,6 @@ app.put("/db/materia/:id", async (req, res) => {
           tipo: evt.tipo,
           anioDeCarrera: evt.anioDeCarrera,
           anio: evt.anio,
-          // Usamos horaInicio y horaFin en lugar de "horario"
           horaInicio: evt.horaInicio,
           horaFin: evt.horaFin,
           correlativas: evt.correlativas,
@@ -232,7 +240,11 @@ app.put("/db/materia/:id", async (req, res) => {
           notaFinal: evt.notaFinal,
           dia: evt.dia,
           idModalidad: evt.idModalidad,
-          idMateriaUsuario: id
+          idMateriaUsuario: id,
+          numero: evt.numero,
+          temasAEstudiar: evt.temasAEstudiar,
+          estado: evt.estado,
+          fechaEntrega: evt.fechaEntrega
         });
       }
     }
@@ -251,6 +263,7 @@ app.put("/db/materia/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // DELETE: Eliminar una inscripción y sus eventos
 app.delete("/db/materia/:id", async (req, res) => {
