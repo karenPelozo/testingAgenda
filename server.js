@@ -265,6 +265,11 @@ app.put("/db/materia/:id", async (req, res) => {
 });
 
 
+
+
+
+
+
 // DELETE: Eliminar una inscripción y sus eventos
 app.delete("/db/materia/:id", async (req, res) => {
   try {
@@ -336,6 +341,25 @@ app.post("/db/modalidades", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+// GET: Obtener correlativas para una materia dada
+app.get("/db/correlativas/:idMateria", async (req, res) => {
+  try {
+    const { idMateria } = req.params;
+    // Se asume que en el modelo de Materia se ha definido la relación many-to-many a través de MateriaCorrelativa
+    const materia = await Materia.findByPk(idMateria, {
+      include: [{ model: Materia, as: "correlativas" }]
+    });
+    if (!materia) return res.status(404).json({ error: "Materia no encontrada" });
+    res.json(materia.correlativas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
 
 // Sincronización de la base de datos y arranque del servidor
 sequelize.sync()

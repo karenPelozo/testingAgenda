@@ -58,13 +58,19 @@
     <div id="form-modal-content">
       <h2 id="modal-title">Nuevo Registro</h2>
       
-      <!-- Selección de Materia (tabla global: solo NombreMateria) -->
+      <!-- Selección de Materia (value = id de la materia) -->
       <label for="NombreMateria">Materia:</label>
       <select id="NombreMateria">
         <option value="">-- Seleccione una Materia --</option>
       </select>
       
-      <!-- Campos para datos que se guardarán en Evento -->
+      <!-- Recuadro de correlativas, se poblará automáticamente -->
+      <label for="correlativasSelect">Correlativas:</label>
+      <select id="correlativasSelect">
+        <option value="">-- Seleccione una Correlativa --</option>
+      </select>
+      
+      <!-- Datos globales del evento -->
       <label for="anioDeCarrera">Año de Carrera:</label>
       <input type="number" id="anioDeCarrera" placeholder="Año de Carrera">
       
@@ -77,9 +83,6 @@
         <option value="">-- Seleccione una Modalidad --</option>
       </select>
       
-      <label for="correlativas">Correlativas (separadas por coma):</label>
-      <input type="text" id="correlativas" placeholder="Ej: Matemática I, Física I">
-
       <!-- Bloque de Horario -->
       <h3>Horario</h3>
       <label for="dia">Día:</label>
@@ -113,7 +116,7 @@
       <label for="notaFinal">Nota Final:</label>
       <input type="number" id="notaFinal" placeholder="Nota Final">
       
-      <!-- Contenedor para eventos dinámicos (opcional para cada evento adicional) -->
+      <!-- Contenedor para eventos dinámicos -->
       <div id="eventos-container">
         <h3>Eventos</h3>
       </div>

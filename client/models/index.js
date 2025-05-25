@@ -3,6 +3,7 @@ const Materia = require("./Materia");
 const Modalidad = require("./Modalidad");
 const MateriaUsuario = require("./MateriaUsuario");
 const Evento = require("./Evento");
+const MateriaCorrelativa = require("./MateriaCorrelativa");
 
 // Relación: Un usuario tiene muchas inscripciones
 User.hasMany(MateriaUsuario, { foreignKey: "idUsuario", as: "materiasInscritas" });
@@ -20,10 +21,19 @@ Evento.belongsTo(MateriaUsuario, { foreignKey: "idMateriaUsuario", as: "inscripc
 Modalidad.hasMany(Evento, { foreignKey: "idModalidad", as: "eventos" });
 Evento.belongsTo(Modalidad, { foreignKey: "idModalidad", as: "modalidad" });
 
+// Una materia puede tener muchas correlativas
+Materia.belongsToMany(Materia, {
+  through: MateriaCorrelativa,
+  as: "correlativas",
+  foreignKey: "idMateria",
+  otherKey: "idCorrelativa"
+});
+
 module.exports = {
   User,
   Materia,
   Modalidad,
   MateriaUsuario,
-  Evento
+  Evento,
+  MateriaCorrelativa
 };
