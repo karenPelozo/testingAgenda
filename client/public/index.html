@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Agenda de Materias</title>
   <link rel="stylesheet" href="css/style.css">
-  <!-- Agregamos Bootstrap Icons -->
+  <!-- Agregar Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 </head>
 <body style="background-image: url('img/banner_colorido.png'); background-size: cover; background-repeat: no-repeat; background-position: center center; background-attachment: fixed;">
@@ -58,13 +58,13 @@
     <div id="form-modal-content">
       <h2 id="modal-title">Nuevo Registro</h2>
       
-      <!-- Selección de Materia (con value = id de la materia y se muestra su nombre) -->
+      <!-- Selección de Materia (value = id, muestra el nombre) -->
       <label for="NombreMateria">Materia:</label>
       <select id="NombreMateria">
         <option value="">-- Seleccione una Materia --</option>
       </select>
       
-      <!-- Campo de correlativas; se autocompleta y no es editable -->
+      <!-- Campo readonly para correlativas autocompletadas -->
       <label for="correlativas">Correlativas:</label>
       <input type="text" id="correlativas" readonly placeholder="Correlativas autocompletadas">
       

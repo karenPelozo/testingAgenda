@@ -75,7 +75,7 @@ function populateModalidadesSelect() {
         data.forEach(mod => {
           const option = document.createElement("option");
           option.value = mod.idModalidad;
-          option.text = mod.Nombre || mod.tipoModalidad; 
+          option.text = mod.Nombre || mod.tipoModalidad;
           select.appendChild(option);
         });
       }
@@ -83,14 +83,14 @@ function populateModalidadesSelect() {
     .catch(err => console.error("Error al cargar modalidades:", err));
 }
 
-// Ahora, en lugar de poblar un select, pobla un campo de texto readonly con los nombres concatenados
+// Pobla el campo de correlativas (campo readonly) concatenando los nombres de las materias correlativas
 function populateCorrelativas(idMateria) {
   fetch(`/db/correlativas/${idMateria}`)
     .then(res => res.json())
     .then(data => {
       const correlativasInput = document.getElementById("correlativas");
       if (correlativasInput) {
-        // Si data no es un array, lo convertimos en array.
+        // Si data no es un array, lo convertimos en array
         let correlativasArray = [];
         if (Array.isArray(data)) {
           correlativasArray = data;
@@ -98,7 +98,6 @@ function populateCorrelativas(idMateria) {
           correlativasArray = [data];
         }
         if (correlativasArray.length > 0) {
-          // Creamos un array de nombres usando la propiedad NombreMateria
           const nombres = correlativasArray.map(mat => mat.NombreMateria);
           correlativasInput.value = nombres.join(", ");
         } else {
@@ -108,7 +107,6 @@ function populateCorrelativas(idMateria) {
     })
     .catch(err => console.error("Error al cargar correlativas:", err));
 }
-
 
 // Carga las inscripciones del usuario (GET)
 function loadMaterias() {
@@ -192,14 +190,14 @@ function openFormModal() {
   document.getElementById("form-modal").style.display = "flex";
 }
 
-// Cierra el modal y limpia el formulario
+// Cierra el modal y limpia los campos
 function closeFormModal() {
   document.getElementById("form-modal").style.display = "none";
   clearForm();
   editingInscripcionId = null;
 }
 
-// Limpia los campos del formulario
+// Limpia el formulario
 function clearForm() {
   document.getElementById("NombreMateria").selectedIndex = 0;
   const selectModalidad = document.getElementById("idModalidad");
@@ -213,7 +211,92 @@ function clearForm() {
   document.getElementById("eventos-container").innerHTML = `<h3>Eventos</h3>`;
 }
 
-// Recolecta los datos del formulario
+// Función editMateria definida en el ámbito global
+function editMateria(id) {
+  editingInscripcionId = id;
+  document.getElementById("modal-title").innerText = "Editar Inscripción";
+  
+  fetch(`/db/materia/${id}`)
+    .then(res => res.json())
+    .then(inscripcion => {
+      // Selecciona la materia en el select
+      const selectMateria = document.getElementById("NombreMateria");
+      if (inscripcion.materia && inscripcion.materia.idMateria) {
+        Array.from(selectMateria.options).forEach(option => {
+          option.selected = (option.value == inscripcion.materia.idMateria);
+        });
+      }
+      
+      // Actualiza el campo de correlativas, según la materia actual
+      populateCorrelativas(inscripcion.materia.idMateria);
+      
+      // Rellena los campos globales según los datos del primer evento
+      if (inscripcion.eventos && inscripcion.eventos.length > 0) {
+        const ev = inscripcion.eventos[0];
+        document.getElementById("anioDeCarrera").value = ev.anioDeCarrera || "";
+        document.getElementById("anio").value = ev.anio || "";
+        document.getElementById("horaInicio").value = ev.horaInicio || "";
+        document.getElementById("horaFin").value = ev.horaFin || "";
+        document.getElementById("examen").value = ev.fechaExamen || "";
+        document.getElementById("notaParcial1").value = ev.notaParcial1 || "";
+        document.getElementById("notaParcial2").value = ev.notaParcial2 || "";
+        document.getElementById("notaFinal").value = ev.notaFinal || "";
+        document.getElementById("idModalidad").value = ev.idModalidad || "";
+      }
+      
+      // Rellena los bloques dinámicos de eventos
+      const eventosContainer = document.getElementById("eventos-container");
+      eventosContainer.innerHTML = `<h3>Eventos</h3>`;
+      if (inscripcion.eventos && inscripcion.eventos.length > 0) {
+        inscripcion.eventos.forEach(ev => {
+          const eventoDiv = document.createElement("div");
+          eventoDiv.classList.add("evento");
+          eventoDiv.innerHTML = `
+            <label>Tipo:
+              <select class="tipo">
+                <option value="Parcial 1" ${ev.tipo === "Parcial 1" ? "selected" : ""}>Parcial 1</option>
+                <option value="Parcial 2" ${ev.tipo === "Parcial 2" ? "selected" : ""}>Parcial 2</option>
+                <option value="Recuperatorio 1" ${ev.tipo === "Recuperatorio 1" ? "selected" : ""}>Recuperatorio 1</option>
+                <option value="Recuperatorio 2" ${ev.tipo === "Recuperatorio 2" ? "selected" : ""}>Recuperatorio 2</option>
+                <option value="Trabajo Practico" ${ev.tipo === "Trabajo Practico" ? "selected" : ""}>Trabajo Practico</option>
+                <option value="Examen Final" ${ev.tipo === "Examen Final" ? "selected" : ""}>Examen Final</option>
+              </select>
+            </label>
+            <label>Número: <input type="number" class="numero" value="${ev.numero || ''}" placeholder="Número"></label>
+            <label>Temas a Estudiar: <input type="text" class="temasAEstudiar" value="${ev.temasAEstudiar || ''}" placeholder="Temas"></label>
+            <label>Estado:
+              <select class="estado">
+                <option value="Pendiente" ${ev.estado === "Pendiente" ? "selected" : ""}>Pendiente</option>
+                <option value="En curso" ${ev.estado === "En curso" ? "selected" : ""}>En curso</option>
+                <option value="Finalizado" ${ev.estado === "Finalizado" ? "selected" : ""}>Finalizado</option>
+              </select>
+            </label>
+            <label>Día:
+              <select class="dia">
+                <option value="Lunes" ${ev.dia === "Lunes" ? "selected" : ""}>Lunes</option>
+                <option value="Martes" ${ev.dia === "Martes" ? "selected" : ""}>Martes</option>
+                <option value="Miércoles" ${ev.dia === "Miércoles" ? "selected" : ""}>Miércoles</option>
+                <option value="Jueves" ${ev.dia === "Jueves" ? "selected" : ""}>Jueves</option>
+                <option value="Viernes" ${ev.dia === "Viernes" ? "selected" : ""}>Viernes</option>
+                <option value="Sábado" ${ev.dia === "Sábado" ? "selected" : ""}>Sábado</option>
+                <option value="Domingo" ${ev.dia === "Domingo" ? "selected" : ""}>Domingo</option>
+              </select>
+            </label>
+            <label>Hora de Inicio: <input type="time" class="horaInicio" value="${ev.horaInicio || ''}"></label>
+            <label>Hora de Fin: <input type="time" class="horaFin" value="${ev.horaFin || ''}"></label>
+            <label>Fecha de Entrega: <input type="date" class="fechaEntrega" value="${ev.fechaEntrega || ''}" placeholder="Fecha"></label>
+            <button type="button" onclick="eliminarEvento(this)">Eliminar Evento</button>
+          `;
+          eventosContainer.appendChild(eventoDiv);
+        });
+      }
+      
+      openFormModal();
+    })
+    .catch(err => console.error("Error al recuperar la inscripción:", err));
+}
+
+// Función para recolectar los datos del formulario
 function getMateriaFromForm() {
   const selectMateria = document.getElementById("NombreMateria");
   // Obtenemos el id y además el NombreMateria del option seleccionado
@@ -237,7 +320,7 @@ function getMateriaFromForm() {
   const notaParcial2 = document.getElementById("notaParcial2") ? document.getElementById("notaParcial2").value : "";
   const notaFinal = document.getElementById("notaFinal") ? document.getElementById("notaFinal").value : "";
   
-  // Se obtiene el valor (texto) del campo correlativas (readOnly)
+  // Se obtiene el valor del input de correlativas (ya es el nombre)
   const correlativasInput = document.getElementById("correlativas");
   const correlativa = correlativasInput ? correlativasInput.value : "";
   
@@ -298,7 +381,7 @@ function getMateriaFromForm() {
   }];
   
   return {
-    // Enviamos tanto el ID como el Nombre (texto) de la materia
+    // Enviamos el NombreMateria (texto) junto con idMateria
     NombreMateria,
     idMateria,
     eventos,
@@ -439,7 +522,8 @@ function showDetails(id) {
             <p><strong>Hora de Fin:</strong> ${ev.horaFin || ""}</p>
             <p><strong>Año de Carrera (Evento):</strong> ${ev.anioDeCarrera || ""}</p>
             <p><strong>Año (Evento):</strong> ${ev.anio || ""}</p>
-            <p><strong>Modalidad (Evento):</strong> ${(ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)) ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : ""}</p>
+            <p><strong>Modalidad (Evento):</strong> ${(ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad))
+              ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : ""}</p>
             <p><strong>Correlativas (Evento):</strong> ${ev.correlativas || ""}</p>
             <p><strong>Fecha de Examen:</strong> ${ev.fechaExamen || ""}</p>
             <p><strong>Notas:</strong> P1: ${ev.notaParcial1 || "N/A"}, P2: ${ev.notaParcial2 || "N/A"}, Final: ${ev.notaFinal || "N/A"}</p>
