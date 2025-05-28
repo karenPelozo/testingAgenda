@@ -89,7 +89,7 @@ const logUser = async (req, res)=>{
           sameSite: 'Lax'
             });
     */
-   console.log(hashPass)
+   
    res.json({ message: "Login exitoso", usuario: { id: usuario.id, nombre: usuario.nameuser, rol: usuario.roluser } });
     }
     }catch(error){

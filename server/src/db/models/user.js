@@ -36,12 +36,11 @@ module.exports = (sequelize, DataTypes) => {
     } ,
     roluser: {
       type:DataTypes.STRING,
-      allowNull:false,
+
       defaultValue:'User'
     }
   }, {
     sequelize,
-    tableName:'Users',
     modelName: 'User',
     timestamps:false
   });
