@@ -20,15 +20,18 @@ const getByIdMaterias = async (req,res)=>{
      try{
       const materia = await Materia.findByPk(id,{
        include:[
-        {
+            {
             model: Modalidad
-        },{
-            model: Evento,
-            include: {
-                model:Resultado,
-                as:'Nota'
-            }
-        }
+                 },{
+                 model: Evento,
+                 include: {
+                       model:Resultado,
+                      as:'Nota'
+                  }
+                 },
+                 {
+                    model: Correlativa
+                 }
        ]
       });  
      res.send(JSON.stringify(materia)).status(200)
@@ -67,16 +70,16 @@ const createMateria = async (req, res)=>{
               anio,
               horario
             })
-            // debo de relacionarlo con los idMateria.
-        const correlativasC={}
-        const cargaCorrelativas= correlativas.forEach(nombreC => {
-                 correlativasC= async()=>{
-                    await Correlativa.create({
-                       nameCorrelativa: nombreC,
-                       MateriaCorrelativa: materianueva.idMateria
-                })
-            }
-        });
+            // debo de relacionarlo con los Materia.
+          for (const nombreC of correlativas) {
+             let correlativa = await Correlativa.findOne({ where: { nameCorrelativa: nombreC } });
+
+             if (!correlativa) {
+                correlativa = await Correlativa.create({ nameCorrelativa: nombreC });
+                 }
+                 await materianueva.addCorrelativa(correlativa); 
+        }
+
         
         const modalidadC= await Modalidad.create({
             modalidad,
@@ -104,7 +107,7 @@ const updateMateria = async (req , res)=>{
         const id = req.params.id
         const materiaUpdate = await Materia.findByPk(id)
         const { namemateria, anioDeCarrera, anio, horario, modalidad,correlativas ,nota, evento } = req.body;
-       //DEBO USAR CREATE Y SAVE CON LOS CAMPOS A CANVIAR PERO DEBO DE MODIFICAR LOS CAMPOS SEGURO UTILIZE EXPRESS POR LOS ID
+       //DEBO USAR CREATE Y SAVE CON LOS CAMPOS A CAMBIAR PERO DEBO DE MODIFICAR LOS CAMPOS SEGURO UTILIZE EXPRESS POR LOS ID O NO
        materiaUpdate.namemateria= namemateria
        materiaUpdate.anioDeCarrera=anioDeCarrera
        materiaUpdate.anio=anio
@@ -113,17 +116,34 @@ const updateMateria = async (req , res)=>{
        mod.nameModalidad= modalidad
        mod.save({fields:['nameModalidad']})
        materiaUpdate.modalidad=mod
-       const correlativasC={}
+       const idsCorr = []
        const cargaCorrelativas=async()=>{
-                 const ids = 0
+           try {
+        const correlativasModels = await Correlativa.findAll({});
+        const mapaCorrelativas = new Map();
+        correlativasModels.forEach(m => {
+            mapaCorrelativas.set(m.nameCorrelativa, m.idCorrelativa);
+        });
+          for (const nombre of correlativas) {
+            if (mapaCorrelativas.has(nombre)) {
+                idsCorr.push(mapaCorrelativas.get(nombre));
+            } else {
+                const nueva = await Correlativa.create({ nameCorrelativa: nombre });
+                idsCorr.push(nueva.idCorrelativa);
+                }
             }
+            } catch (error) {
+            console.error("Error al cargar o crear correlativas:", error);
+        }
+            return idsCorr;
+                }
        
        await materiaUpdate.save({fiels:[
         'namemateria',
         'anioDeCarrera',
         'anio',
         'horario',
-       // 'modalidad',
+        'idModalidad',
     ]});
         res.status(201).json({mensaje: 'SE MODIFICO CORRECTAMENTE'})
     }catch(error){
