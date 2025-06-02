@@ -573,8 +573,26 @@ function login() {
     .then(data => {
       loggedUserId = data.user.id;
       document.getElementById("login-modal").style.display = "none";
+
+      const nombre = data.user.nombre;
+      const rol = data.user.rol.toLowerCase();
       const headerContainer = document.querySelector(".header-container");
-      headerContainer.innerHTML += `<p style="color: #fff; margin-left: 10px;">Bienvenido, ${data.user.nombre} (${data.user.rol})</p>`;
+
+      // Mostrar texto al lado del título solo si es administrador
+      if (rol === 'administrador' || rol === 'admin') {
+        headerContainer.innerHTML += `<p style="color: #fff; margin-left: 10px;">(administrador)</p>`;
+      }
+
+      // Toastify para todos (sin aclarar rol)
+      Toastify({
+        text: `Bienvenido, ${nombre}`,
+        duration: 4000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#4CAF50",
+        close: true,
+      }).showToast();
+
       loadMaterias();
     })
     .catch(error => {
