@@ -585,11 +585,11 @@ function login() {
 
       // Toastify para todos (sin aclarar rol)
       Toastify({
-        text: `Bienvenido, ${nombre}`,
+        text: `Bienvenid@, ${nombre}`,
         duration: 4000,
         gravity: "top",
         position: "right",
-        backgroundColor: "#4CAF50",
+        backgroundColor: "#b78ef1",
         close: true,
       }).showToast();
 
