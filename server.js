@@ -3,6 +3,9 @@ const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
 
+// Importa el middleware de autorización desde la carpeta middleware
+const verifyAdmin = require('./client/src/server/middleware/verifyAdmin');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -24,23 +27,19 @@ app.get("/", (req, res) => {
   Endpoints para Usuarios
 ===========================================*/
 
-// Registro de Usuario
+// Registro de Usuario (auto-registro público)
+// Se evita que se autorregistre un usuario con rol de "administrador"
 app.post("/register", async (req, res) => {
   try {
     const { nombre, password, rol } = req.body;
     if (!nombre || !password || !rol) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
-    const existingUser = await User.findOne({ where: { nombre } });
-    if (existingUser) {
-      return res.status(400).json({ error: "El usuario ya existe" });
+    // Evita el registro de administradores desde la interfaz pública
+    if (rol.toLowerCase() === "administrador" || rol.toLowerCase() === "admin") {
+      return res.status(403).json({ error: "No se permite el auto-registro de administradores" });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      nombre,
-      password: hashedPassword,
-      rol,
-    });
+    const newUser = await createUser(req.body);
     res.status(201).json({ message: "Usuario registrado", user: newUser });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -62,7 +61,22 @@ app.post("/login", async (req, res) => {
     if (!validPassword) {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
+    // Nota: En producción se debería generar un token o establecer sesión.
     res.json({ message: "Login exitoso", user: { id: user.id, nombre: user.nombre, rol: user.rol } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/*===========================================
+  Endpoint para obtener Usuarios (Administración)
+===========================================*/
+
+// GET para listar todos los usuarios (protegido para administradores)
+app.get("/db/usuarios", verifyAdmin, async (req, res) => {
+  try {
+    const usuarios = await User.findAll();
+    res.json(usuarios);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -72,58 +86,32 @@ app.post("/login", async (req, res) => {
   Endpoints para Inscripciones de Materias y Eventos
 ===========================================*/
 
-// POST: Guardar una inscripción y registrar sus eventos
 app.post("/db/materia", async (req, res) => {
   try {
-    /*
-      Se espera recibir un JSON similar a:
-      {
-        "NombreMateria": "Matemática 1",
-        "eventos": [
-          {
-            "tipo": "Examen 1",
-            "anioDeCarrera": 1,
-            "anio": 2025,
-            "dia": "Lunes",
-            "horaInicio": "09:00",
-            "horaFin": "11:00",
-            "correlativas": "Matemática Básica, Física 1",
-            "fechaExamen": "2025-06-15",
-            "notaParcial1": 8.5,
-            "notaParcial2": 7.0,
-            "notaFinal": 8.75,
-            "idModalidad": 1
-          }
-          // Se pueden incluir más eventos
-        ],
-        "idUsuario": 2
-      }
-    */
     const { NombreMateria, eventos, idUsuario } = req.body;
     if (!NombreMateria || !idUsuario) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
-    // Buscar o crear la materia global (la tabla Materia tiene sólo NombreMateria)
+    // Buscar o crear la materia global
     let materia = await Materia.findOne({ where: { NombreMateria } });
     if (!materia) {
       materia = await Materia.create({ NombreMateria });
     }
     
-    // Crear la inscripción en la tabla MateriaUsuario
+    // Crear la inscripción
     const inscripcion = await MateriaUsuario.create({
       idMateria: materia.idMateria,
       idUsuario
     });
     
-    // Crear cada uno de los eventos asociados a esta inscripción
+    // Crear eventos asociados
     if (eventos && Array.isArray(eventos)) {
       for (const evt of eventos) {
         await Evento.create({
           tipo: evt.tipo,
           anioDeCarrera: evt.anioDeCarrera,
           anio: evt.anio,
-          // Eliminamos "horario" y usamos horaInicio y horaFin
           horaInicio: evt.horaInicio,
           horaFin: evt.horaFin,
           correlativas: evt.correlativas,
@@ -138,7 +126,7 @@ app.post("/db/materia", async (req, res) => {
       }
     }
     
-    // Recupera la inscripción completa (un join con Materia y los Eventos, que incluyen Modalidad)
+    // Retornar la inscripción completa con joins
     const inscripcionCompleta = await MateriaUsuario.findOne({
       where: { idMateriaUsuario: inscripcion.idMateriaUsuario },
       include: [
@@ -154,7 +142,6 @@ app.post("/db/materia", async (req, res) => {
   }
 });
 
-// GET: Obtener todas las inscripciones (con sus eventos) de un usuario
 app.get("/db/materias", async (req, res) => {
   try {
     const idUsuario = req.query.idUsuario;
@@ -174,7 +161,6 @@ app.get("/db/materias", async (req, res) => {
   }
 });
 
-// GET: Obtener una inscripción (con sus eventos) por el ID de la inscripción
 app.get("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -194,36 +180,25 @@ app.get("/db/materia/:id", async (req, res) => {
   }
 });
 
-// PUT: Actualizar una inscripción y sus eventos
-// PUT: Actualizar una inscripción y sus eventos.
 app.put("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    // Incluir la materia actual en la consulta para comparar el nombre
     const inscripcion = await MateriaUsuario.findByPk(id, {
       include: [{ model: Materia, as: "materia" }]
     });
     if (!inscripcion) {
       return res.status(404).json({ error: "Inscripción no encontrada" });
     }
-    
     const { NombreMateria, eventos, idUsuario } = req.body;
-    
-    // Si se ingresó un nuevo NombreMateria distinto del que ya tiene la inscripción,
-    // buscamos (o creamos) la materia sin modificar la existente.
     if (NombreMateria && inscripcion.materia.NombreMateria !== NombreMateria) {
       let materiaNueva = await Materia.findOne({ where: { NombreMateria } });
       if (!materiaNueva) {
         materiaNueva = await Materia.create({ NombreMateria });
       }
-      // Actualizamos la inscripción para que apunte al registro de "Algebra" (o el nuevo nombre)
       await inscripcion.update({ idUsuario, idMateria: materiaNueva.idMateria });
     } else {
-      // Si el nombre no ha cambiado, solo actualizamos el idUsuario (en caso de ser necesario)
       await inscripcion.update({ idUsuario });
     }
-    
-    // Actualizar los eventos: eliminamos los existentes y creamos los nuevos
     if (eventos && Array.isArray(eventos)) {
       await Evento.destroy({ where: { idMateriaUsuario: id } });
       for (const evt of eventos) {
@@ -248,7 +223,6 @@ app.put("/db/materia/:id", async (req, res) => {
         });
       }
     }
-    
     const inscripcionActualizada = await MateriaUsuario.findOne({
       where: { idMateriaUsuario: id },
       include: [
@@ -256,7 +230,6 @@ app.put("/db/materia/:id", async (req, res) => {
         { model: Evento, as: "eventos", include: [{ model: Modalidad, as: "modalidad" }] }
       ]
     });
-    
     res.json(inscripcionActualizada);
   } catch (error) {
     console.error("Error al actualizar la inscripción:", error);
@@ -264,22 +237,6 @@ app.put("/db/materia/:id", async (req, res) => {
   }
 });
 
-function verifyAdmin(req, res, next) {
-  if (req.headers["x-admin"] === "true") {
-    return next();
-  }
-  if (req.user && req.user.rol === "administrador") {
-    return next();
-  }
-  return res.status(403).json({ error: "Acceso denegado, no eres administrador." });
-}
-
-
-
-
-
-
-// DELETE: Eliminar una inscripción y sus eventos
 app.delete("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -298,7 +255,6 @@ app.delete("/db/materia/:id", async (req, res) => {
   Endpoints para la Tabla Global de Materia
 ===========================================*/
 
-// GET: Listar todas las materias globales
 app.get("/db/materias/global", async (req, res) => {
   try {
     const materias = await Materia.findAll();
@@ -308,7 +264,6 @@ app.get("/db/materias/global", async (req, res) => {
   }
 });
 
-// POST: Crear una nueva materia global (solo el nombre)
 app.post("/db/materia/global", async (req, res) => {
   try {
     const { NombreMateria } = req.body;
@@ -326,7 +281,6 @@ app.post("/db/materia/global", async (req, res) => {
   Endpoints para la Tabla de Modalidad
 ===========================================*/
 
-// GET: Listar todas las modalidades
 app.get("/db/modalidades", async (req, res) => {
   try {
     const modalidades = await Modalidad.findAll();
@@ -336,8 +290,6 @@ app.get("/db/modalidades", async (req, res) => {
   }
 });
 
-// POST: Crear una modalidad (por ejemplo, Presencial, Virtual, Híbrido)
-// Se asume que el modelo Modalidad utiliza la columna "tipoModalidad"
 app.post("/db/modalidades", async (req, res) => {
   try {
     const { tipoModalidad } = req.body;
@@ -351,12 +303,10 @@ app.post("/db/modalidades", async (req, res) => {
   }
 });
 
-
 // GET: Obtener correlativas para una materia dada
 app.get("/db/correlativas/:idMateria", async (req, res) => {
   try {
     const { idMateria } = req.params;
-    // Se asume que en el modelo de Materia se ha definido la relación many-to-many a través de MateriaCorrelativa
     const materia = await Materia.findByPk(idMateria, {
       include: [{ model: Materia, as: "correlativas" }]
     });
@@ -367,18 +317,51 @@ app.get("/db/correlativas/:idMateria", async (req, res) => {
   }
 });
 
-app.get("/db/usuarios", verifyAdmin, async (req, res) => {
+/*===========================================
+  Función auxiliar para crear usuarios
+===========================================*/
+
+async function createUser(userData) {
+  const { nombre, password, rol } = userData;
+  
+  if (!nombre || !password || !rol) {
+    throw new Error("Faltan campos obligatorios");
+  }
+  
+  const existingUser = await User.findOne({ where: { nombre } });
+  if (existingUser) {
+    throw new Error("El usuario ya existe");
+  }
+  
+  const hashedPassword = await bcrypt.hash(password, 10);
+  
+  const newUser = await User.create({
+    nombre,
+    password: hashedPassword,
+    rol,
+  });
+  
+  return newUser;
+}
+
+/*===========================================
+  Endpoints para Usuarios (Administración)
+===========================================*/
+
+// NOTA: Este endpoint permite crear usuarios, incluido administradores, SOLO si se pasa el middleware verifyAdmin.
+app.post("/db/usuarios", verifyAdmin, async (req, res) => {
   try {
-    const usuarios = await User.findAll();
-    res.json(usuarios);
+    const newUser = await createUser(req.body);
+    res.status(201).json({ message: "Usuario creado", user: newUser });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 });
 
+/*===========================================
+  Sincronización de la Base de Datos y Arranque del Servidor
+===========================================*/
 
-
-// Sincronización de la base de datos y arranque del servidor
 sequelize.sync()
   .then(() => {
     console.log("Base de datos y tablas creadas correctamente.");
