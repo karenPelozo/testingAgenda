@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadMaterias();
   }
 
-  // Cuando se selecciona una materia, se actualiza automáticamente el campo de correlativas
+  // Actualiza automáticamente el campo correlativas cuando se selecciona una materia
   const selectMateria = document.getElementById("NombreMateria");
   if (selectMateria) {
     selectMateria.addEventListener("change", () => {
@@ -21,30 +21,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Botones del formulario de materias
   const btnOpenForm = document.getElementById("btnOpenForm");
   const btnCancelar = document.getElementById("btnCancelar");
   const btnGuardar = document.getElementById("btnGuardar");
   const btnAgregarEvento = document.getElementById("btnAgregarEvento");
 
-  btnOpenForm.addEventListener("click", () => {
-    openFormModal();
-  });
-
-  btnCancelar.addEventListener("click", () => {
+  if (btnOpenForm) btnOpenForm.addEventListener("click", openFormModal);
+  if (btnCancelar) btnCancelar.addEventListener("click", () => {
     closeFormModal();
     editingInscripcionId = null;
   });
-
-  btnGuardar.addEventListener("click", () => {
-    saveMateria();
-  });
-
-  btnAgregarEvento.addEventListener("click", () => {
-    agregarEvento();
-  });
+  if (btnGuardar) btnGuardar.addEventListener("click", saveMateria);
+  if (btnAgregarEvento) btnAgregarEvento.addEventListener("click", agregarEvento);
 });
 
-// Pobla el select de materias globales
+/* ============================
+    Funciones para Materias y Eventos
+============================ */
+
 function populateMateriasSelect() {
   fetch("/db/materias/global")
     .then(res => res.json())
@@ -54,7 +49,6 @@ function populateMateriasSelect() {
         select.innerHTML = `<option value="">-- Seleccione una Materia --</option>`;
         data.forEach(materia => {
           const option = document.createElement("option");
-          // Usamos el id de la materia como value y el nombre como texto
           option.value = materia.idMateria;
           option.text = materia.NombreMateria;
           select.appendChild(option);
@@ -64,7 +58,6 @@ function populateMateriasSelect() {
     .catch(err => console.error("Error al cargar materias globales:", err));
 }
 
-// Pobla el select de modalidades
 function populateModalidadesSelect() {
   fetch("/db/modalidades")
     .then(res => res.json())
@@ -83,14 +76,12 @@ function populateModalidadesSelect() {
     .catch(err => console.error("Error al cargar modalidades:", err));
 }
 
-// Pobla el campo de correlativas (campo readonly) concatenando los nombres de las materias correlativas
 function populateCorrelativas(idMateria) {
   fetch(`/db/correlativas/${idMateria}`)
     .then(res => res.json())
     .then(data => {
       const correlativasInput = document.getElementById("correlativas");
       if (correlativasInput) {
-        // Si data no es un array, lo convertimos en array
         let correlativasArray = [];
         if (Array.isArray(data)) {
           correlativasArray = data;
@@ -108,7 +99,6 @@ function populateCorrelativas(idMateria) {
     .catch(err => console.error("Error al cargar correlativas:", err));
 }
 
-// Carga las inscripciones del usuario (GET)
 function loadMaterias() {
   if (!loggedUserId) {
     console.error("El ID del usuario no está definido.");
@@ -122,7 +112,6 @@ function loadMaterias() {
     .catch(err => console.error(err));
 }
 
-// Renderiza la tabla de inscripciones
 function renderMaterias(inscripciones) {
   const table = document.getElementById("materiasTable");
   let tbody = table.querySelector("tbody");
@@ -131,32 +120,29 @@ function renderMaterias(inscripciones) {
     table.appendChild(tbody);
   }
   tbody.innerHTML = "";
-
   inscripciones.forEach(insc => {
     const materiaNombre = insc.materia?.NombreMateria || "N/A";
-
-    let anioDeCarrera = "";
-    let anio = "";
-    let horas = "";
-    let modalidad = "";
-    let correlativas = "";
-    let fechaExamen = "";
-    let notas = "";
-    
+    let anioDeCarrera = "",
+        anio = "",
+        horas = "",
+        modalidad = "",
+        correlativas = "",
+        fechaExamen = "",
+        notas = "";
     if (insc.eventos && insc.eventos.length > 0) {
       const ev = insc.eventos[0];
       anioDeCarrera = ev.anioDeCarrera || "";
       anio = ev.anio || "";
       horas = `${ev.horaInicio || ""}<br>${ev.horaFin || ""}`;
-      modalidad = (ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad))
-                    ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : "";
+      modalidad = ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)
+                  ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)
+                  : "";
       correlativas = ev.correlativas || "";
       fechaExamen = ev.fechaExamen || "";
       notas = `P1: ${ev.notaParcial1 !== undefined ? ev.notaParcial1 : "N/A"}, ` +
               `P2: ${ev.notaParcial2 !== undefined ? ev.notaParcial2 : "N/A"}, ` +
               `Final: ${ev.notaFinal !== undefined ? ev.notaFinal : "N/A"}`;
     }
-    
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${materiaNombre}</td>
@@ -183,21 +169,18 @@ function renderMaterias(inscripciones) {
   });
 }
 
-// Abre el modal del formulario
 function openFormModal() {
   populateMateriasSelect();
   populateModalidadesSelect();
   document.getElementById("form-modal").style.display = "flex";
 }
 
-// Cierra el modal y limpia los campos
 function closeFormModal() {
   document.getElementById("form-modal").style.display = "none";
   clearForm();
   editingInscripcionId = null;
 }
 
-// Limpia el formulario
 function clearForm() {
   document.getElementById("NombreMateria").selectedIndex = 0;
   const selectModalidad = document.getElementById("idModalidad");
@@ -211,26 +194,19 @@ function clearForm() {
   document.getElementById("eventos-container").innerHTML = `<h3>Eventos</h3>`;
 }
 
-// Función editMateria definida en el ámbito global
 function editMateria(id) {
   editingInscripcionId = id;
   document.getElementById("modal-title").innerText = "Editar Inscripción";
-  
   fetch(`/db/materia/${id}`)
     .then(res => res.json())
     .then(inscripcion => {
-      // Selecciona la materia en el select
       const selectMateria = document.getElementById("NombreMateria");
       if (inscripcion.materia && inscripcion.materia.idMateria) {
         Array.from(selectMateria.options).forEach(option => {
           option.selected = (option.value == inscripcion.materia.idMateria);
         });
       }
-      
-      // Actualiza el campo de correlativas, según la materia actual
       populateCorrelativas(inscripcion.materia.idMateria);
-      
-      // Rellena los campos globales según los datos del primer evento
       if (inscripcion.eventos && inscripcion.eventos.length > 0) {
         const ev = inscripcion.eventos[0];
         document.getElementById("anioDeCarrera").value = ev.anioDeCarrera || "";
@@ -243,8 +219,6 @@ function editMateria(id) {
         document.getElementById("notaFinal").value = ev.notaFinal || "";
         document.getElementById("idModalidad").value = ev.idModalidad || "";
       }
-      
-      // Rellena los bloques dinámicos de eventos
       const eventosContainer = document.getElementById("eventos-container");
       eventosContainer.innerHTML = `<h3>Eventos</h3>`;
       if (inscripcion.eventos && inscripcion.eventos.length > 0) {
@@ -284,46 +258,37 @@ function editMateria(id) {
             </label>
             <label>Hora de Inicio: <input type="time" class="horaInicio" value="${ev.horaInicio || ''}"></label>
             <label>Hora de Fin: <input type="time" class="horaFin" value="${ev.horaFin || ''}"></label>
-            <label>Fecha de Entrega: <input type="date" class="fechaEntrega" value="${ev.fechaEntrega || ''}" placeholder="Fecha"></label>
+            <label>Fecha de Examen: <input type="date" class="fechaEntrega" value="${ev.fechaEntrega || ''}" placeholder="Fecha"></label>
             <button type="button" onclick="eliminarEvento(this)">Eliminar Evento</button>
           `;
           eventosContainer.appendChild(eventoDiv);
         });
       }
-      
       openFormModal();
     })
     .catch(err => console.error("Error al recuperar la inscripción:", err));
 }
 
-// Función para recolectar los datos del formulario
 function getMateriaFromForm() {
   const selectMateria = document.getElementById("NombreMateria");
-  // Obtenemos el id y además el NombreMateria del option seleccionado
   const idMateria = selectMateria.value;
   const NombreMateria = selectMateria.options[selectMateria.selectedIndex].text;
-
   const anioDeCarrera = document.getElementById("anioDeCarrera")
     ? document.getElementById("anioDeCarrera").value
     : "";
   const anio = document.getElementById("anio") ? document.getElementById("anio").value : "";
-  
   const globalHoraInicio = document.getElementById("horaInicio")
     ? document.getElementById("horaInicio").value
     : "";
   const globalHoraFin = document.getElementById("horaFin")
     ? document.getElementById("horaFin").value
     : "";
-  
   const examen = document.getElementById("examen") ? document.getElementById("examen").value : "";
   const notaParcial1 = document.getElementById("notaParcial1") ? document.getElementById("notaParcial1").value : "";
   const notaParcial2 = document.getElementById("notaParcial2") ? document.getElementById("notaParcial2").value : "";
   const notaFinal = document.getElementById("notaFinal") ? document.getElementById("notaFinal").value : "";
-  
-  // Se obtiene el valor del input de correlativas (ya es el nombre)
   const correlativasInput = document.getElementById("correlativas");
   const correlativa = correlativasInput ? correlativasInput.value : "";
-  
   const selectModalidad = document.getElementById("idModalidad");
   const idModalidad = selectModalidad ? parseInt(selectModalidad.value) : null;
   
@@ -381,7 +346,6 @@ function getMateriaFromForm() {
   }];
   
   return {
-    // Enviamos el NombreMateria (texto) junto con idMateria
     NombreMateria,
     idMateria,
     eventos,
@@ -389,7 +353,6 @@ function getMateriaFromForm() {
   };
 }
 
-// Guarda (crea o actualiza) la inscripción
 function saveMateria() {
   const materiaData = getMateriaFromForm();
   if (!editingInscripcionId) {
@@ -420,7 +383,6 @@ function saveMateria() {
   }
 }
 
-// Elimina la inscripción
 function deleteMateria(id) {
   Swal.fire({
     title: '¿Estás seguro?',
@@ -453,7 +415,6 @@ function deleteMateria(id) {
   });
 }
 
-// Agrega un bloque de evento dinámico
 function agregarEvento() {
   const eventosContainer = document.getElementById("eventos-container");
   const eventoDiv = document.createElement("div");
@@ -497,12 +458,10 @@ function agregarEvento() {
   eventosContainer.appendChild(eventoDiv);
 }
 
-// Elimina un bloque de evento dinámico
 function eliminarEvento(button) {
   button.parentElement.remove();
 }
 
-// Muestra los detalles completos de una inscripción
 function showDetails(id) {
   fetch(`/db/materia/${id}`)
     .then(res => res.json())
@@ -522,8 +481,7 @@ function showDetails(id) {
             <p><strong>Hora de Fin:</strong> ${ev.horaFin || ""}</p>
             <p><strong>Año de Carrera (Evento):</strong> ${ev.anioDeCarrera || ""}</p>
             <p><strong>Año (Evento):</strong> ${ev.anio || ""}</p>
-            <p><strong>Modalidad (Evento):</strong> ${(ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad))
-              ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : ""}</p>
+            <p><strong>Modalidad (Evento):</strong> ${ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad) : ""}</p>
             <p><strong>Correlativas (Evento):</strong> ${ev.correlativas || ""}</p>
             <p><strong>Fecha de Examen:</strong> ${ev.fechaExamen || ""}</p>
             <p><strong>Notas:</strong> P1: ${ev.notaParcial1 || "N/A"}, P2: ${ev.notaParcial2 || "N/A"}, Final: ${ev.notaFinal || "N/A"}</p>
@@ -555,6 +513,110 @@ function showInfo() {
   });
 }
 
+/* ============================
+   Funciones para Usuarios (Administración)
+============================ */
+
+function mostrarFormularioAltaUsuario() {
+  document.getElementById("modalUsuario").style.display = "block";
+}
+
+function cerrarModalUsuario() {
+  document.getElementById("modalUsuario").style.display = "none";
+  document.getElementById("nombreUsuario").value = "";
+  document.getElementById("passwordUsuario").value = "";
+  document.getElementById("rolUsuario").value = "";
+}
+
+function guardarUsuario() {
+  const nombre = document.getElementById("nombreUsuario").value;
+  const password = document.getElementById("passwordUsuario").value;
+  const rol = document.getElementById("rolUsuario").value;
+
+  if (!nombre || !password || !rol) {
+    alert("Complete todos los campos.");
+    return;
+  }
+
+  fetch("/db/usuarios", {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      "x-admin": "true"  // Para pasar el middleware de admin en pruebas
+    },
+    body: JSON.stringify({ nombre, password, rol })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert("Error: " + data.error);
+      } else {
+        alert("Usuario creado exitosamente");
+        cargarUsuarios();
+        document.getElementById("formUsuario").reset();
+        cerrarModalUsuario();
+      }
+    })
+    .catch(err => console.error("Error al guardar usuario:", err));
+}
+
+function cargarUsuarios() {
+  const tbody = document.getElementById("usuariosTable").querySelector("tbody");
+  fetch("/db/usuarios", { 
+      headers: { "x-admin": "true" }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        tbody.innerHTML = "";
+        data.forEach(usuario => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${usuario.id}</td>
+            <td>${usuario.nombre}</td>
+            <td>${usuario.rol}</td>
+            <td>
+              <button onclick="editarUsuario(${usuario.id})" class="btn btn-warning">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button onclick="eliminarUsuario(${usuario.id})" class="btn btn-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        console.error("Error: la respuesta no es un array", data);
+      }
+    })
+    .catch(err => console.error("Error al cargar usuarios:", err));
+}
+
+function editarUsuario(id) {
+  alert("Editar usuario con ID: " + id);
+  // Podés implementar la lógica para editar usuario, por ejemplo, abriendo un modal de edición.
+}
+
+function eliminarUsuario(id) {
+  if (confirm("¿Está seguro de eliminar este usuario?")) {
+    fetch(`/db/usuarios/${id}`, {
+      method: "DELETE",
+      headers: { "x-admin": "true" }
+    })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message || "Usuario eliminado");
+        cargarUsuarios();
+      })
+      .catch(err => console.error("Error al eliminar usuario:", err));
+  }
+}
+
+/* ============================
+   Función de Login
+============================ */
+
 function login() {
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
@@ -577,13 +639,11 @@ function login() {
       const nombre = data.user.nombre;
       const rol = data.user.rol.toLowerCase();
       const headerContainer = document.querySelector(".header-container");
-
-      // Mostrar texto al lado del título solo si es administrador
-      if (rol === 'administrador' || rol === 'admin') {
+      if (rol === "administrador" || rol === "admin") {
         headerContainer.innerHTML += `<p style="color: #fff; margin-left: 10px;">(administrador)</p>`;
       }
-
-      // Toastify para todos (sin aclarar rol)
+      
+      // Usamos Toastify para el mensaje (asegúrate de tenerlo incluido, de lo contrario usa alert)
       Toastify({
         text: `Bienvenid@, ${nombre}`,
         duration: 4000,
@@ -593,6 +653,19 @@ function login() {
         close: true,
       }).showToast();
 
+      // Si es admin, se podría redirigir o mostrar el panel de usuarios aquí.
+      // Por ejemplo, si quieres redirigir a admin.html:
+      if (rol === 'administrador') {
+         window.location.href = "admin.html";
+         return;
+      }
+
+      // Si no redirigís, muestra la sección de administración en el index (si la hay)
+      if (rol === "administrador") {
+        document.getElementById("adminUsuarios").style.display = "block";
+        cargarUsuarios();
+      }
+      
       loadMaterias();
     })
     .catch(error => {

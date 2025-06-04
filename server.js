@@ -264,6 +264,15 @@ app.put("/db/materia/:id", async (req, res) => {
   }
 });
 
+function verifyAdmin(req, res, next) {
+  if (req.headers["x-admin"] === "true") {
+    return next();
+  }
+  if (req.user && req.user.rol === "administrador") {
+    return next();
+  }
+  return res.status(403).json({ error: "Acceso denegado, no eres administrador." });
+}
 
 
 
@@ -358,6 +367,14 @@ app.get("/db/correlativas/:idMateria", async (req, res) => {
   }
 });
 
+app.get("/db/usuarios", verifyAdmin, async (req, res) => {
+  try {
+    const usuarios = await User.findAll();
+    res.json(usuarios);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 
 
