@@ -3,10 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <title>Panel de Administración</title>
-  <!-- Incluí tu hoja de estilos y Bootstrap Icons -->
+  <!-- Estilos y Bootstrap Icons -->
   <link rel="stylesheet" href="css/styleAdmin.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-  
+
+  <style>
+    /* Estilos para mejorar el modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.3);
+      border-radius: 8px;
+      text-align: center;
+      transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    }
+
+    .modal.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .modal .close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .modal label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .modal input, .modal select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .modal button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    /* Fondo oscuro cuando se abre el modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .modal-backdrop.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -51,7 +130,42 @@
     </table>
   </div>
 
-<script src="js/scriptAdmin.js"></script>
+  <!-- Fondo opaco del modal -->
+  <div id="modalBackdrop" class="modal-backdrop"></div>
+
+  <!-- Modal para editar usuario -->
+  <div id="modalEditarUsuario" class="modal">
+    <span class="close" onclick="cerrarModalEditarUsuario()">&times;</span>
+    <h2>Editar Usuario</h2>
+    
+    <label for="editNombreUsuario">Nombre:</label>
+    <input type="text" id="editNombreUsuario" placeholder="Nombre">
+    
+    <label for="editRolUsuario">Rol:</label>
+    <select id="editRolUsuario">
+      <option value="administrador">Administrador</option>
+      <option value="usuario">Usuario</option>
+    </select>
+
+    <button class="btn-primary" onclick="guardarEdicionUsuario()">Guardar Cambios</button>
+    <button class="btn-secondary" onclick="cerrarModalEditarUsuario()">Cancelar</button>
+  </div>
+
+  <script>
+    // Mostrar el modal
+    function abrirModalEditarUsuario() {
+      document.getElementById("modalEditarUsuario").classList.add("active");
+      document.getElementById("modalBackdrop").classList.add("active");
+    }
+
+    // Cerrar el modal
+    function cerrarModalEditarUsuario() {
+      document.getElementById("modalEditarUsuario").classList.remove("active");
+      document.getElementById("modalBackdrop").classList.remove("active");
+    }
+  </script>
+
+  <script src="js/scriptAdmin.js"></script>
 </body>
 <footer>
   <div>

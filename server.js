@@ -350,6 +350,19 @@ async function createUser(userData) {
   Endpoints para Usuarios (Administración)
 ===========================================*/
 
+app.get("/db/usuarios/:id", verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const usuario = await User.findByPk(id);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    res.json(usuario);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // NOTA: Este endpoint permite crear usuarios, incluido administradores, SOLO si se pasa el middleware verifyAdmin.
 app.post("/db/usuarios", verifyAdmin, async (req, res) => {
   try {
@@ -372,6 +385,27 @@ app.delete("/db/usuarios/:id", verifyAdmin, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.put("/db/usuarios/:id", verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, rol } = req.body;
+
+    // Verificar que el usuario existe
+    const usuario = await User.findByPk(id);
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    // Actualizar los datos en la BD
+    await usuario.update({ nombre, rol });
+
+    res.json({ message: "Usuario actualizado correctamente", usuario });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 /*===========================================
   Sincronización de la Base de Datos y Arranque del Servidor
