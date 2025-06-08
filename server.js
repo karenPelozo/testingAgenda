@@ -389,7 +389,7 @@ app.delete("/db/usuarios/:id", verifyAdmin, async (req, res) => {
 app.put("/db/usuarios/:id", verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, rol } = req.body;
+    const { nombre, rol, password } = req.body;
 
     // Verificar que el usuario existe
     const usuario = await User.findByPk(id);
@@ -397,14 +397,24 @@ app.put("/db/usuarios/:id", verifyAdmin, async (req, res) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
+    // Construir los datos a actualizar
+    const datosActualizados = { nombre, rol };
+
+    // Si el usuario ingresó una nueva contraseña, la hasheamos
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      datosActualizados.password = hashedPassword;
+    }
+
     // Actualizar los datos en la BD
-    await usuario.update({ nombre, rol });
+    await usuario.update(datosActualizados);
 
     res.json({ message: "Usuario actualizado correctamente", usuario });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 
 /*===========================================

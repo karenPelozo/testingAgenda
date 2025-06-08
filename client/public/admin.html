@@ -55,36 +55,25 @@
   <div id="modalBackdrop" class="modal-backdrop"></div>
 
   <!-- Modal para editar usuario -->
-  <div id="modalEditarUsuario" class="modal">
-    <span class="close" onclick="cerrarModalEditarUsuario()">&times;</span>
-    <h2>Editar Usuario</h2>
-    
-    <label for="editNombreUsuario">Nombre:</label>
-    <input type="text" id="editNombreUsuario" placeholder="Nombre">
-    
-    <label for="editRolUsuario">Rol:</label>
-    <select id="editRolUsuario">
-      <option value="administrador">Administrador</option>
-      <option value="usuario">Usuario</option>
-    </select>
+<div id="modalEditarUsuario" class="modal">
+  <span class="close" onclick="cerrarModalEditarUsuario()">&times;</span>
+  <h2>Editar Usuario</h2>
+  
+  <label for="editNombreUsuario">Nombre:</label>
+  <input type="text" id="editNombreUsuario" placeholder="Nombre">
+  
+  <label for="editRolUsuario">Rol:</label>
+  <select id="editRolUsuario">
+    <option value="administrador">Administrador</option>
+    <option value="usuario">Usuario</option>
+  </select>
 
-    <button class="btn-primary" onclick="guardarEdicionUsuario()">Guardar Cambios</button>
-    <button class="btn-secondary" onclick="cerrarModalEditarUsuario()">Cancelar</button>
-  </div>
+  <label for="editPasswordUsuario">Nueva Contraseña (Opcional):</label>
+  <input type="password" id="editPasswordUsuario" placeholder="Ingrese nueva contraseña">
 
-  <script>
-    // Mostrar el modal
-    function abrirModalEditarUsuario() {
-      document.getElementById("modalEditarUsuario").classList.add("active");
-      document.getElementById("modalBackdrop").classList.add("active");
-    }
-
-    // Cerrar el modal
-    function cerrarModalEditarUsuario() {
-      document.getElementById("modalEditarUsuario").classList.remove("active");
-      document.getElementById("modalBackdrop").classList.remove("active");
-    }
-  </script>
+  <button class="btn-primary" onclick="guardarEdicionUsuario()">Guardar Cambios</button>
+  <button class="btn-secondary" onclick="cerrarModalEditarUsuario()">Cancelar</button>
+</div>
 
   <script src="js/scriptAdmin.js"></script>
 </body>
