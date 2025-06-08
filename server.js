@@ -237,6 +237,8 @@ app.put("/db/materia/:id", async (req, res) => {
   }
 });
 
+
+
 app.delete("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -355,6 +357,19 @@ app.post("/db/usuarios", verifyAdmin, async (req, res) => {
     res.status(201).json({ message: "Usuario creado", user: newUser });
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete("/db/usuarios/:id", verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const rowsDeleted = await User.destroy({ where: { id } });
+    if (rowsDeleted === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    res.json({ message: "Usuario eliminado correctamente" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
