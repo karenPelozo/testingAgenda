@@ -4,63 +4,9 @@
   <meta charset="UTF-8">
   <title>Panel de Administración</title>
   <!-- Incluí tu hoja de estilos y Bootstrap Icons -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/styleAdmin.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-  <style>
-    /* Algunos estilos básicos para el panel */
-    body {
-      background: #f4f4f4;
-      font-family: Arial, sans-serif;
-    }
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      background: #fff;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-    }
-    form {
-      margin-bottom: 20px;
-    }
-    form input, form select {
-      width: 100%;
-      padding: 8px;
-      margin: 5px 0 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .btn {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .btn-primary {
-      background-color: #007bff;
-      color: #fff;
-    }
-    .btn-secondary {
-      background-color: #6c757d;
-      color: #fff;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    table th,
-    table td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-    }
-    table th {
-      background: #eee;
-    }
-  </style>
+  
 </head>
 <body>
   <div class="container">
@@ -105,101 +51,7 @@
     </table>
   </div>
 
-  <script>
-    // Función para cargar la lista de usuarios
-    function cargarUsuarios() {
-      const tbody = document.getElementById("tablaUsuarios").querySelector("tbody");
-      fetch("/db/usuarios", {
-        headers: { "x-admin": "true" } // Solo para pruebas, para que el middleware de admin lo acepte
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            tbody.innerHTML = "";
-            data.forEach(usuario => {
-              const tr = document.createElement("tr");
-              tr.innerHTML = `
-                <td>${usuario.id}</td>
-                <td>${usuario.nombre}</td>
-                <td>${usuario.rol}</td>
-                <td>
-                  <button onclick="editarUsuario(${usuario.id})" class="btn btn-warning">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button onclick="eliminarUsuario(${usuario.id})" class="btn btn-danger">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              `;
-              tbody.appendChild(tr);
-            });
-          } else {
-            console.error("Respuesta inesperada:", data);
-          }
-        })
-        .catch(err => console.error("Error al cargar usuarios:", err));
-    }
-    
-    // Función para guardar un nuevo usuario
-    function guardarUsuario() {
-      const nombre = document.getElementById("nombreUsuario").value;
-      const password = document.getElementById("passwordUsuario").value;
-      const rol = document.getElementById("rolUsuario").value;
-      
-      if (!nombre || !password || !rol) {
-        alert("Complete todos los campos.");
-        return;
-      }
-      
-      fetch("/db/usuarios", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-admin": "true"  // Header para pasar autenticación (temporal para pruebas)
-        },
-        body: JSON.stringify({ nombre, password, rol })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.error) {
-            alert("Error: " + data.error);
-          } else {
-            alert("Usuario creado exitosamente");
-            cargarUsuarios(); // Recarga la lista
-            document.getElementById("formUsuario").reset();
-          }
-        })
-        .catch(err => console.error("Error al guardar usuario:", err));
-    }
-    
-    // Función básica para editar usuario (se puede expandir con un modal de edición)
-    function editarUsuario(id) {
-      alert("Función editar usuario con ID: " + id);
-      // Podrías redirigir o abrir un modal pasando los datos actuales para editar
-    }
-    
-    // Función para eliminar usuario
-    function eliminarUsuario(id) {
-      if (confirm("¿Está seguro de eliminar este usuario?")) {
-        fetch(`/db/usuarios/${id}`, {
-          method: "DELETE",
-          headers: { "x-admin": "true" }  // Header para pasar autenticación
-        })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message || "Usuario eliminado");
-            cargarUsuarios();
-          })
-          .catch(err => console.error("Error al eliminar usuario:", err));
-      }
-    }
-    
-    // Al cargar la página, se invoca cargarUsuarios() para llenar la tabla
-    window.onload = () => {
-      // Opcionalmente se podría verificar que se tenga sesión de admin, o ya haber pasado por login.
-      cargarUsuarios();
-    }
-  </script>
+<script src="js/scriptAdmin.js"></script>
 </body>
 <footer>
   <div>
