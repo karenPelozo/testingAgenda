@@ -1,3 +1,9 @@
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+const fs = require('fs');
+const swaggerDocument = JSON.parse(fs.readFileSync('./swagger.json', 'utf8'));
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -7,6 +13,7 @@ const bcrypt = require("bcrypt");
 const verifyAdmin = require('./client/src/server/middleware/verifyAdmin');
 
 const app = express();
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 const port = process.env.PORT || 3000;
 
 // Importa la conexión de Sequelize y los modelos

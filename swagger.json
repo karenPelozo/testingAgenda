@@ -1,0 +1,246 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Agenda Académica UNPAZ",
+    "version": "1.0.0",
+    "description": "API para gestión de usuarios, materias, inscripciones y eventos."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor local"
+    }
+  ],
+  "paths": {
+    "/register": {
+      "post": {
+        "summary": "Registrar nuevo usuario",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "password": { "type": "string" },
+                  "rol": { "type": "string" }
+                },
+                "required": ["nombre", "password", "rol"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Usuario creado exitosamente" },
+          "400": { "description": "Faltan datos obligatorios" }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Iniciar sesión",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["nombre", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Inicio de sesión exitoso" },
+          "401": { "description": "Credenciales inválidas" }
+        }
+      }
+    },
+    "/materias": {
+      "get": {
+        "summary": "Obtener todas las materias",
+        "responses": {
+          "200": { "description": "Lista de materias" }
+        }
+      },
+      "post": {
+        "summary": "Crear una nueva materia",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "descripcion": { "type": "string" }
+                },
+                "required": ["nombre", "descripcion"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Materia creada exitosamente" }
+        }
+      }
+    },
+    "/materias/{id}": {
+      "put": {
+        "summary": "Actualizar una materia",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "descripcion": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Materia actualizada" },
+          "404": { "description": "Materia no encontrada" }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar una materia",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Materia eliminada" },
+          "404": { "description": "Materia no encontrada" }
+        }
+      }
+    },
+    "/inscripciones": {
+      "get": {
+        "summary": "Obtener todas las inscripciones",
+        "responses": {
+          "200": { "description": "Lista de inscripciones" }
+        }
+      },
+      "post": {
+        "summary": "Crear una inscripción",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "estudianteId": { "type": "string" },
+                  "materiaId": { "type": "string" }
+                },
+                "required": ["estudianteId", "materiaId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Inscripción creada exitosamente" }
+        }
+      }
+    },
+    "/eventos": {
+      "get": {
+        "summary": "Obtener todos los eventos",
+        "responses": {
+          "200": { "description": "Lista de eventos" }
+        }
+      },
+      "post": {
+        "summary": "Crear un evento",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "titulo": { "type": "string" },
+                  "fecha": { "type": "string", "format": "date" },
+                  "descripcion": { "type": "string" }
+                },
+                "required": ["titulo", "fecha", "descripcion"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Evento creado exitosamente" }
+        }
+      }
+    },
+    "/eventos/{id}": {
+      "put": {
+        "summary": "Actualizar un evento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "titulo": { "type": "string" },
+                  "fecha": { "type": "string", "format": "date" },
+                  "descripcion": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Evento actualizado" },
+          "404": { "description": "Evento no encontrado" }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar un evento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Evento eliminado" },
+          "404": { "description": "Evento no encontrado" }
+        }
+      }
+    }
+  }
+}
