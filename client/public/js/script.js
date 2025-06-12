@@ -1,5 +1,3 @@
-// test comentario Omar Brondo
-
 // ——— 1 · Variables globales ———
 let loggedUserId       = null;
 let editingInscripcionId = null;
