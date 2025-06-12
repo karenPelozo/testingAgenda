@@ -36,3 +36,24 @@
     transform: rotate(360deg);
   }
 }
+More actions
+.App {
+  font-family: sans-serif;
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  max-width: 400px;
+}
+
+.formulario input,
+.formulario button {
+  padding: 8px;
+  font-size: 16px;
+}

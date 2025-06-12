@@ -720,6 +720,33 @@ function eliminarUsuario(id) {
   }
 }
 
+/* ============================Add commentMore actions
+   Función de notificaciones
+============================ */
 
+async function obtenerProximosEventos() {
+  try {
+    const response = await fetch('/api/eventos/proximos');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const eventos = await response.json();
+    return eventos;
+  } catch (error) {
+    console.error('Error al obtener eventos:', error);
+    return [];
+  }
+}
+
+document.getElementById('btnNotifications').addEventListener('click', async () => {
+  const panel = document.getElementById('notificationsList');
+  if (panel.style.display === 'none' || panel.style.display === '') {
+    panel.style.display = 'block';
+    const eventos = await obtenerProximosEventos();
+    mostrarEventosEnNotificaciones(eventos);
+  } else {
+    panel.style.display = 'none';
+  }
+});
 
 

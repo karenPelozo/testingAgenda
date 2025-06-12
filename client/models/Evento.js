@@ -45,8 +45,16 @@ const Evento = sequelize.define("Evento", {
     allowNull: true,
   },
   notaFinal: {
-    type: DataTypes.FLOAT,
-    allowNull: true,
+    type: DataTypes.VIRTUAL,
+  get() {
+    const nota1 = this.notaParcial1;
+    const nota2 = this.notaParcial2;
+
+    if (nota1 == null || nota2 == null) return null;
+
+    const promedio = (nota1 + nota2) / 2;
+    return Math.ceil(promedio);
+  }
   },
   idModalidad: {
     type: DataTypes.INTEGER,

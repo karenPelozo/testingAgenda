@@ -11,6 +11,7 @@ const jwt = require("jsonwebtoken");
 const SECRET = process.env.JWT_SECRET || "clavesecreta";
 // Importa el middleware de autorización desde la carpeta middleware
 const verifyAdmin = require('./client/src/server/middleware/verifyAdmin');
+const notificacionesRoute = require('./client/src/server/routes/notificaciones.route.js')
 const authenticateToken = require("./client/src/server/middleware/auth");
 
 
@@ -26,6 +27,7 @@ const { Materia, Modalidad, MateriaUsuario, Evento } = require('./client/models/
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "client", "public")));
+app.use("/notificaciones", notificacionesRoute);
 
 // Ruta raíz: enviar index.html
 app.get("/", (req, res) => {
