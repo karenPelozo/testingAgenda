@@ -1,82 +1,213 @@
 // test comentario Omar Brondo
 
-let loggedUserId = null;
+// ——— 1 · Variables globales ———
+let loggedUserId       = null;
 let editingInscripcionId = null;
 
+// ——— 2 · Helpers ———
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`
+  };
+}
+
+// ——— 3 · DOM Ready ———
 document.addEventListener("DOMContentLoaded", () => {
-  // Al cargar el DOM, pobla los selects: materias y modalidades
+  // 3.1 Recuperar sesión
+  const userJson = localStorage.getItem("user");
+  if (!userJson) {
+    // si no hay usuario, muestro el login y salgo
+    const loginModal = document.getElementById("login-modal");
+    if (loginModal) loginModal.style.display = "flex";
+    return;
+  }
+
+  // 3.2 Si hay usuario, cargo sus datos
+  const user = JSON.parse(userJson);
+  loggedUserId = user.id;
+
+  // ocultar modal login
+  const loginModal = document.getElementById("login-modal");
+  if (loginModal) loginModal.style.display = "none";
+
+  // mostrar botón logout
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.style.display = "inline-block";
+
+  // si es admin, cargo el panel admin
+  if (user.rol.toLowerCase() === "administrador") {
+    cargarUsuarios();
+    cargarMateriasAdmin();
+  }
+
+  // siempre cargo selects y materias de alumno
   populateMateriasSelect();
   populateModalidadesSelect();
+  loadMaterias();
 
-  // Si el usuario ya se logueó, carga sus inscripciones
-  if (loggedUserId) {
-    loadMaterias();
-  }
+  // enlazo botones del formulario
+  const btnOpenForm     = document.getElementById("btnOpenForm");
+  const btnCancelar     = document.getElementById("btnCancelar");
+  const btnGuardar      = document.getElementById("btnGuardar");
+  const btnAgregarEvento= document.getElementById("btnAgregarEvento");
 
-  // Actualiza automáticamente el campo correlativas cuando se selecciona una materia
-  const selectMateria = document.getElementById("NombreMateria");
-  if (selectMateria) {
-    selectMateria.addEventListener("change", () => {
-      populateCorrelativas(selectMateria.value);
-    });
-  }
-
-  // Botones del formulario de materias
-  const btnOpenForm = document.getElementById("btnOpenForm");
-  const btnCancelar = document.getElementById("btnCancelar");
-  const btnGuardar = document.getElementById("btnGuardar");
-  const btnAgregarEvento = document.getElementById("btnAgregarEvento");
-
-  if (btnOpenForm) btnOpenForm.addEventListener("click", openFormModal);
-  if (btnCancelar) btnCancelar.addEventListener("click", () => {
+  if (btnOpenForm)        btnOpenForm.addEventListener("click", openFormModal);
+ if (btnCancelar) {
+  btnCancelar.addEventListener("click", e => {
+    e.preventDefault();
+    console.log("➖ Cancelar pulsado");
     closeFormModal();
     editingInscripcionId = null;
   });
-  if (btnGuardar) btnGuardar.addEventListener("click", saveMateria);
-  if (btnAgregarEvento) btnAgregarEvento.addEventListener("click", agregarEvento);
+}
+  if (btnGuardar)         btnGuardar.addEventListener("click", saveMateria);
+  if (btnAgregarEvento)   btnAgregarEvento.addEventListener("click", agregarEvento);
 });
 
-/* ============================
-    Funciones para Materias y Eventos
-============================ */
+function login() {
+  const nombre   = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
 
+  fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nombre, password })
+  })
+    .then(res => res.json())
+    .then(data => {
+if (data.error) {
+  Swal.fire({
+    icon: 'error',
+    title: 'Login fallido',
+    text: data.error
+  });
+  return;
+}
+
+      // 1) Guardar token + user
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      loggedUserId = data.user.id;
+
+      // 2) Si es admin: redirigir inmediatamente a admin.html
+      if (data.user.rol.toLowerCase() === "administrador") {
+        window.location.href = "admin.html";
+        return;
+      }
+
+      // 3) Si es alumno: ocultar modal y cargar su panel
+
+      Toastify({
+        text: `Bienvenid@, ${nombre}`,
+        duration: 4000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#b78ef1",
+        close: true,
+      }).showToast();
+// 3) si es alumno: recargo la misma página
+  location.reload();
+
+
+      const loginModal = document.getElementById("login-modal");
+      if (loginModal) loginModal.style.display = "none";
+
+      populateMateriasSelect();
+      populateModalidadesSelect();
+      loadMaterias();
+    })
+    .catch(err => console.error("Error en login:", err));
+}
+
+
+// ——— Cerrar sesión ———
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
+}
+// ——— 5 · Funciones Materias + Eventos ———
+// ——— Rellena el select de materias y asocia el listener ———
 function populateMateriasSelect() {
-  fetch("/db/materias/global")
+  fetch("/db/materias/global", { headers: authHeaders() })
     .then(res => res.json())
     .then(data => {
       const select = document.getElementById("NombreMateria");
-      if (select) {
-        select.innerHTML = `<option value="">-- Seleccione una Materia --</option>`;
-        data.forEach(materia => {
-          const option = document.createElement("option");
-          option.value = materia.idMateria;
-          option.text = materia.NombreMateria;
-          select.appendChild(option);
-        });
-      }
+      if (!select) return;
+
+      // 1) Rellenar opciones
+      select.innerHTML = `<option value="">-- Seleccione una Materia --</option>`;
+      data.forEach(materia => {
+        const option = document.createElement("option");
+        option.value = materia.idMateria;
+        option.text  = materia.NombreMateria;
+        select.appendChild(option);
+      });
+
+      // 2) Asigno el listener aquí, justo después de poblar
+      select.removeEventListener("change", _populateCorrelativas);  // por si ya existía
+      select.addEventListener("change", _populateCorrelativas);
     })
     .catch(err => console.error("Error al cargar materias globales:", err));
 }
 
-function populateModalidadesSelect() {
-  fetch("/db/modalidades")
-    .then(res => res.json())
-    .then(data => {
-      const select = document.getElementById("idModalidad");
-      if (select) {
-        select.innerHTML = `<option value="">-- Seleccione una Modalidad --</option>`;
-        data.forEach(mod => {
-          const option = document.createElement("option");
-          option.value = mod.idModalidad;
-          option.text = mod.Nombre || mod.tipoModalidad;
-          select.appendChild(option);
-        });
-      }
-    })
-    .catch(err => console.error("Error al cargar modalidades:", err));
+// ——— Wrapper que llama a la función real y la loggea ———
+function _populateCorrelativas(e) {
+  const idMateria = e.target.value;
+  console.log("▶ change detected, idMateria =", idMateria);
+  populateCorrelativas(idMateria);
 }
 
+// ——— Trae y muestra las correlativas ———
 function populateCorrelativas(idMateria) {
+  const correlativasInput = document.getElementById("correlativas");
+  if (!correlativasInput) return;
+
+  // limpio si no hay selección
+  if (!idMateria) {
+    correlativasInput.value = "";
+    return;
+  }
+
+  console.log("🔍 Fetch correlativas para materia:", idMateria);
+  fetch(`/db/correlativas/${idMateria}`, { headers: authHeaders() })
+    .then(res => {
+      console.log("Response status correlativas:", res.status);
+      return res.json();
+    })
+    .then(data => {
+      console.log("📥 Datos correlativas recibidos:", data);
+      const arr = Array.isArray(data) ? data : data ? [data] : [];
+      correlativasInput.value = arr.map(m => m.NombreMateria).join(", ");
+    })
+    .catch(err => {
+      console.error("Error al cargar correlativas:", err);
+      correlativasInput.value = "";
+    });
+}
+
+
+function populateModalidadesSelect() {
+  fetch("/db/modalidades", { headers: authHeaders() })
+    .then(r => r.json())
+    .then(list => {
+      const sel = document.getElementById("idModalidad");
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Seleccione una Modalidad --</option>';
+      list.forEach(m =>
+        sel.insertAdjacentHTML(
+          "beforeend",
+          `<option value="${m.idModalidad}">${m.Nombre || m.tipoModalidad}</option>`
+        )
+      );
+    })
+    .catch(console.error);
+}
+
+/*function populateCorrelativas(idMateria) {
   fetch(`/db/correlativas/${idMateria}`)
     .then(res => res.json())
     .then(data => {
@@ -97,22 +228,22 @@ function populateCorrelativas(idMateria) {
       }
     })
     .catch(err => console.error("Error al cargar correlativas:", err));
-}
+}*/
+
 
 function loadMaterias() {
-  if (!loggedUserId) {
-    console.error("El ID del usuario no está definido.");
-    return;
-  }
-  fetch(`/db/materias?idUsuario=${loggedUserId}`)
+  if (!loggedUserId) return;
+
+  fetch(`/db/materias?idUsuario=${loggedUserId}`, {
+    headers: authHeaders()
+  })
     .then(res => res.json())
-    .then(data => {
-      renderMaterias(data);
-    })
-    .catch(err => console.error(err));
+    .then(data => renderMaterias(data))
+    .catch(err => console.error("Error al cargar tus inscripciones:", err));
 }
 
-function renderMaterias(inscripciones) {
+
+function renderMaterias(rows = []) {
   const table = document.getElementById("materiasTable");
   let tbody = table.querySelector("tbody");
   if (!tbody) {
@@ -120,78 +251,58 @@ function renderMaterias(inscripciones) {
     table.appendChild(tbody);
   }
   tbody.innerHTML = "";
-  inscripciones.forEach(insc => {
-    const materiaNombre = insc.materia?.NombreMateria || "N/A";
-    let anioDeCarrera = "",
-        anio = "",
-        horas = "",
-        modalidad = "",
-        correlativas = "",
-        fechaExamen = "",
-        notas = "";
-    if (insc.eventos && insc.eventos.length > 0) {
-      const ev = insc.eventos[0];
-      anioDeCarrera = ev.anioDeCarrera || "";
-      anio = ev.anio || "";
-      horas = `${ev.horaInicio || ""}<br>${ev.horaFin || ""}`;
-      modalidad = ev.modalidad && (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)
-                  ? (ev.modalidad.Nombre || ev.modalidad.tipoModalidad)
-                  : "";
-      correlativas = ev.correlativas || "";
-      fechaExamen = ev.fechaExamen || "";
-      notas = `P1: ${ev.notaParcial1 !== undefined ? ev.notaParcial1 : "N/A"}, ` +
-              `P2: ${ev.notaParcial2 !== undefined ? ev.notaParcial2 : "N/A"}, ` +
-              `Final: ${ev.notaFinal !== undefined ? ev.notaFinal : "N/A"}`;
-    }
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${materiaNombre}</td>
-      <td>${anioDeCarrera}</td>
-      <td>${anio}</td>
-      <td>${horas}</td>
-      <td>${modalidad}</td>
-      <td>${correlativas}</td>
-      <td>${fechaExamen}</td>
-      <td>${notas}</td>
-      <td>
-        <button class="btn btn-info" onclick="showDetails(${insc.idMateriaUsuario})">
-          <i class="bi bi-eye"></i>
-        </button>
-        <button class="btn btn-warning" onclick="editMateria(${insc.idMateriaUsuario})">
-          <i class="bi bi-pencil"></i>
-        </button>
-        <button class="btn btn-danger" onclick="deleteMateria(${insc.idMateriaUsuario})">
-          <i class="bi bi-trash"></i>
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
+  rows.forEach(({ idMateriaUsuario, materia, eventos }) => {
+    const ev = eventos?.[0] || {};
+    tbody.insertAdjacentHTML(
+      "beforeend",
+      `<tr>
+        <td>${materia?.NombreMateria || "N/A"}</td>
+        <td>${ev.anioDeCarrera || ""}</td>
+        <td>${ev.anio || ""}</td>
+        <td>${ev.horaInicio || ""}<br>${ev.horaFin || ""}</td>
+        <td>${ev.modalidad?.Nombre || ev.modalidad?.tipoModalidad || ""}</td>
+        <td>${ev.correlativas || ""}</td>
+        <td>${ev.fechaExamen || ""}</td>
+        <td>P1:${ev.notaParcial1 ?? "N/A"},P2:${ev.notaParcial2 ?? "N/A"},F:${ev.notaFinal ?? "N/A"}</td>
+        <td>
+          <button class="btn btn-info" onclick="showDetails(${idMateriaUsuario})">
+            <i class="bi bi-eye"></i>
+          </button>
+          <button class="btn btn-warning" onclick="editMateria(${idMateriaUsuario})">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-danger" onclick="deleteMateria(${idMateriaUsuario})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>`
+    );
   });
 }
 
 function openFormModal() {
   populateMateriasSelect();
   populateModalidadesSelect();
-  document.getElementById("form-modal").style.display = "flex";
+  const fm = document.getElementById("form-modal");
+  if (fm) fm.style.display = "flex";
 }
 
 function closeFormModal() {
-  document.getElementById("form-modal").style.display = "none";
+  const fm = document.getElementById("form-modal");
+  if (fm) fm.style.display = "none";
   clearForm();
   editingInscripcionId = null;
 }
 
 function clearForm() {
-  document.getElementById("NombreMateria").selectedIndex = 0;
-  const selectModalidad = document.getElementById("idModalidad");
-  if (selectModalidad) {
-    selectModalidad.selectedIndex = 0;
-  }
-  const correlativasInput = document.getElementById("correlativas");
-  if (correlativasInput) {
-    correlativasInput.value = "";
-  }
-  document.getElementById("eventos-container").innerHTML = `<h3>Eventos</h3>`;
+  const nm = document.getElementById("NombreMateria");
+  if (nm) nm.selectedIndex = 0;
+  const md = document.getElementById("idModalidad");
+  if (md) md.selectedIndex = 0;
+  const cr = document.getElementById("correlativas");
+  if (cr) cr.value = "";
+  const ec = document.getElementById("eventos-container");
+  if (ec) ec.innerHTML = "<h3>Eventos</h3>";
 }
 
 function editMateria(id) {
@@ -355,33 +466,29 @@ function getMateriaFromForm() {
 
 function saveMateria() {
   const materiaData = getMateriaFromForm();
-  if (!editingInscripcionId) {
-    fetch("/db/materia", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(materiaData)
+
+  const url    = editingInscripcionId
+               ? `/db/materia/${editingInscripcionId}`
+               : "/db/materia";
+  const method = editingInscripcionId ? "PUT" : "POST";
+
+  fetch(url, {
+    method,
+    headers: authHeaders(),
+    body: JSON.stringify(materiaData)
+  })
+    .then(r => {
+      if (!r.ok) throw new Error("No autorizado");
+      return r.json();
     })
-      .then(response => response.json())
-      .then(() => {
-        loadMaterias();
-        closeFormModal();
-      })
-      .catch(err => console.error(err));
-  } else {
-    fetch(`/db/materia/${editingInscripcionId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(materiaData)
+    .then(() => {
+      loadMaterias();
+      closeFormModal();
+      editingInscripcionId = null;
     })
-      .then(response => response.json())
-      .then(() => {
-        loadMaterias();
-        closeFormModal();
-        editingInscripcionId = null;
-      })
-      .catch(err => console.error(err));
-  }
+    .catch(err => console.error("Error al guardar materia:", err));
 }
+
 
 function deleteMateria(id) {
   Swal.fire({
@@ -542,7 +649,7 @@ function guardarUsuario() {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
-      "x-admin": "true"  // Para pasar el middleware de admin en pruebas
+      headers: authHeaders()  // Para pasar el middleware de admin en pruebas
     },
     body: JSON.stringify({ nombre, password, rol })
   })
@@ -563,7 +670,7 @@ function guardarUsuario() {
 function cargarUsuarios() {
   const tbody = document.getElementById("usuariosTable").querySelector("tbody");
   fetch("/db/usuarios", { 
-      headers: { "x-admin": "true" }
+      headers: { headers: authHeaders() }
     })
     .then(res => res.json())
     .then(data => {
@@ -602,7 +709,7 @@ function eliminarUsuario(id) {
   if (confirm("¿Está seguro de eliminar este usuario?")) {
     fetch(`/db/usuarios/${id}`, {
       method: "DELETE",
-      headers: { "x-admin": "true" }
+      headers: { headers: authHeaders() }
     })
       .then(res => res.json())
       .then(data => {
@@ -613,67 +720,6 @@ function eliminarUsuario(id) {
   }
 }
 
-/* ============================
-   Función de Login
-============================ */
 
-function login() {
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  
-  fetch("/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nombre: username, password: password })
-  })
-    .then(response => {
-      if (!response.ok) {
-        return response.json().then(err => { throw new Error(err.error); });
-      }
-      return response.json();
-    })
-    .then(data => {
-      loggedUserId = data.user.id;
-      document.getElementById("login-modal").style.display = "none";
 
-      const nombre = data.user.nombre;
-      const rol = data.user.rol.toLowerCase();
-      const headerContainer = document.querySelector(".header-container");
-      if (rol === "administrador" || rol === "admin") {
-        headerContainer.innerHTML += `<p style="color: #fff; margin-left: 10px;">(administrador)</p>`;
-      }
-      
-      // Usamos Toastify para el mensaje (asegúrate de tenerlo incluido, de lo contrario usa alert)
-      Toastify({
-        text: `Bienvenid@, ${nombre}`,
-        duration: 4000,
-        gravity: "top",
-        position: "right",
-        backgroundColor: "#b78ef1",
-        close: true,
-      }).showToast();
 
-      // Si es admin, se podría redirigir o mostrar el panel de usuarios aquí.
-      // Por ejemplo, si quieres redirigir a admin.html:
-      if (rol === 'administrador') {
-         window.location.href = "admin.html";
-         return;
-      }
-
-      // Si no redirigís, muestra la sección de administración en el index (si la hay)
-      if (rol === "administrador") {
-        document.getElementById("adminUsuarios").style.display = "block";
-        cargarUsuarios();
-      }
-      
-      loadMaterias();
-    })
-    .catch(error => {
-      Swal.fire({
-        icon: "error",
-        title: "Usuario incorrecto",
-        text: error.message,
-        confirmButtonText: "Aceptar"
-      });
-    });
-}

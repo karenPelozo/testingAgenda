@@ -3,84 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <title>Panel de Administración</title>
-  <!-- Estilos y Bootstrap Icons -->
   <link rel="stylesheet" href="css/styleAdmin.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 
+
+  <style>
+    /* Algunas reglas para dar espacio entre secciones */
+    .admin-section { margin: 2rem 0; }
+    .admin-section h2 { margin-bottom: 1rem; }
+    #tablaMaterias th, #tablaMaterias td { text-align: left; padding: 0.5rem; }
+    #tablaMaterias { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    #tablaMaterias th, #tablaMaterias td { border: 1px solid #ddd; }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>Panel de Administración</h1>
-    
-    <!-- Formulario para dar de alta un nuevo usuario -->
-    <form id="formUsuario" onsubmit="guardarUsuario(); return false;">
-      <h2>Nuevo Usuario</h2>
-      <label for="nombreUsuario">Nombre:</label>
-      <input type="text" id="nombreUsuario" placeholder="Ingrese nombre" required>
-      
-      <label for="passwordUsuario">Contraseña:</label>
-      <input type="password" id="passwordUsuario" placeholder="Ingrese contraseña" required>
-      
-      <label for="rolUsuario">Rol:</label>
-      <select id="rolUsuario" required>
-        <option value="">-- Seleccione un Rol --</option>
-        <option value="administrador">Administrador</option>
-        <option value="usuario">Usuario</option>
-      </select>
-      
-      <button type="submit" class="btn btn-primary">
-        <i class="bi bi-check-circle"></i> Guardar Usuario
-      </button>
-      <button type="reset" class="btn btn-secondary">
-        <i class="bi bi-x-circle"></i> Limpiar
-      </button>
-    </form>
-    
-    <!-- Tabla para listar usuarios existentes -->
-    <h2>Usuarios Registrados</h2>
-    <table id="tablaUsuarios">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Rol</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+
+    <!-- Sección Usuarios -->
+    <section class="admin-section" id="usuarios-admin">
+      <h1>Panel de Administración</h1>
+      <form id="formUsuario" onsubmit="guardarUsuario(); return false;">
+        <h2>Nuevo Usuario</h2>
+        <label>Nombre:</label>
+        <input type="text" id="nombreUsuario" required>
+        <label>Contraseña:</label>
+        <input type="password" id="passwordUsuario" required>
+        <label>Rol:</label>
+        <select id="rolUsuario" required>
+          <option value="">-- Seleccione un Rol --</option>
+          <option value="administrador">Administrador</option>
+          <option value="estudiante">Estudiante</option>
+        </select>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Crear Usuario
+        </button>
+        <button type="reset" class="btn btn-secondary">
+          <i class="bi bi-x-circle"></i> Limpiar
+        </button>
+      </form>
+
+      <h2>Usuarios Registrados</h2>
+      <table id="tablaUsuarios">
+        <thead>
+          <tr><th>ID</th><th>Nombre</th><th>Rol</th><th>Acciones</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Sección Materias -->
+    <section class="admin-section" id="materias-admin">
+      <h2>Materias Globales</h2>
+
+      <!-- Alta de Materia -->
+      <form id="formMateria" onsubmit="guardarMateria(); return false;">
+        <label>Nombre de Materia:</label>
+        <input type="text" id="nombreMateria" required placeholder="Ingrese nombre">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Crear Materia
+        </button>
+        <button type="reset" class="btn btn-secondary">
+          <i class="bi bi-x-circle"></i> Limpiar
+        </button>
+      </form>
+
+      <!-- Listado de Materias -->
+      <table id="tablaMaterias">
+        <thead>
+          <tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
   </div>
 
-  <!-- Fondo opaco del modal -->
+  <!-- Modal edición usuario (sin cambios) -->
+   <!-- Fondo opaco del modal -->
   <div id="modalBackdrop" class="modal-backdrop"></div>
 
   <!-- Modal para editar usuario -->
-<div id="modalEditarUsuario" class="modal">
-  <span class="close" onclick="cerrarModalEditarUsuario()">&times;</span>
-  <h2>Editar Usuario</h2>
-  
-  <label for="editNombreUsuario">Nombre:</label>
-  <input type="text" id="editNombreUsuario" placeholder="Nombre">
-  
-  <label for="editRolUsuario">Rol:</label>
-  <select id="editRolUsuario">
-    <option value="administrador">Administrador</option>
-    <option value="usuario">Usuario</option>
-  </select>
+  <div id="modalEditarUsuario" class="modal">
+    <span class="close" onclick="cerrarModalEditarUsuario()">&times;</span>
+    <h2>Editar Usuario</h2>
+    
+    <label for="editNombreUsuario">Nombre:</label>
+    <input type="text" id="editNombreUsuario" placeholder="Nombre">
+    
+    <label for="editRolUsuario">Rol:</label>
+    <select id="editRolUsuario">
+      <option value="administrador">Administrador</option>
+      <option value="estudiante">Estudiante</option>
+    </select>
 
-  <label for="editPasswordUsuario">Nueva Contraseña (Opcional):</label>
-  <input type="password" id="editPasswordUsuario" placeholder="Ingrese nueva contraseña">
+    <label for="editPasswordUsuario">Nueva Contraseña (Opcional):</label>
+    <input type="password" id="editPasswordUsuario" placeholder="Ingrese nueva contraseña">
 
-  <button class="btn-primary" onclick="guardarEdicionUsuario()">Guardar Cambios</button>
-  <button class="btn-secondary" onclick="cerrarModalEditarUsuario()">Cancelar</button>
-</div>
-
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="guardarEdicionUsuario()">
+        <i class="bi bi-save"></i> Guardar
+      </button>
+      <button class="btn btn-secondary" onclick="cerrarModalEditarUsuario()">
+        <i class="bi bi-x-circle"></i> Cancelar
+      </button>
+    </div>
+  </div>
+  </div>
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="js/scriptAdmin.js"></script>
 </body>
 <footer>
-  <div>
-    <img src="https://edunpaz.unpaz.edu.ar/OMP/public/site/images/userbiblio/unpaz_horizontal-transparente_(400X139px).png" alt="UNPAZ Logo">
-  </div>
+  <img src="https://edunpaz.unpaz.edu.ar/OMP/public/site/images/userbiblio/unpaz_horizontal-transparente_(400X139px).png" alt="UNPAZ Logo">
   <p>Trabajo de Campo 2025</p>
 </footer>
 </html>

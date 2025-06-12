@@ -1,4 +1,3 @@
-
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const fs = require('fs');
@@ -8,9 +7,12 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
-
+const jwt = require("jsonwebtoken");
+const SECRET = process.env.JWT_SECRET || "clavesecreta";
 // Importa el middleware de autorización desde la carpeta middleware
 const verifyAdmin = require('./client/src/server/middleware/verifyAdmin');
+const authenticateToken = require("./client/src/server/middleware/auth");
+
 
 const app = express();
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -36,7 +38,7 @@ app.get("/", (req, res) => {
 
 // Registro de Usuario (auto-registro público)
 // Se evita que se autorregistre un usuario con rol de "administrador"
-app.post("/register", async (req, res) => {
+/*app.post("/register", async (req, res) => {
   try {
     const { nombre, password, rol } = req.body;
     if (!nombre || !password || !rol) {
@@ -51,28 +53,25 @@ app.post("/register", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+});*/
 
 // Login de Usuario
 app.post("/login", async (req, res) => {
-  try {
-    const { nombre, password } = req.body;
-    if (!nombre || !password) {
-      return res.status(400).json({ error: "Faltan campos obligatorios" });
-    }
-    const user = await User.findOne({ where: { nombre } });
-    if (!user) {
-      return res.status(401).json({ error: "Usuario no encontrado" });
-    }
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ error: "Contraseña incorrecta" });
-    }
-    // Nota: En producción se debería generar un token o establecer sesión.
-    res.json({ message: "Login exitoso", user: { id: user.id, nombre: user.nombre, rol: user.rol } });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  const { nombre, password } = req.body;
+  if (!nombre || !password) {
+    return res.status(400).json({ error: "Faltan campos obligatorios" });
   }
+  const user = await User.findOne({ where: { nombre } });
+  if (!user) return res.status(401).json({ error: "Usuario no encontrado" });
+
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.status(401).json({ error: "Contraseña incorrecta" });
+
+  // Generar token con payload mínimo
+  const payload = { id: user.id, nombre: user.nombre, rol: user.rol };
+  const token = jwt.sign(payload, SECRET, { expiresIn: "2h" });
+
+  res.json({ message: "Login exitoso", token, user: payload });
 });
 
 /*===========================================
@@ -80,7 +79,7 @@ app.post("/login", async (req, res) => {
 ===========================================*/
 
 // GET para listar todos los usuarios (protegido para administradores)
-app.get("/db/usuarios", verifyAdmin, async (req, res) => {
+app.get("/db/usuarios", authenticateToken,verifyAdmin, async (req, res) => {
   try {
     const usuarios = await User.findAll();
     res.json(usuarios);
@@ -93,7 +92,7 @@ app.get("/db/usuarios", verifyAdmin, async (req, res) => {
   Endpoints para Inscripciones de Materias y Eventos
 ===========================================*/
 
-app.post("/db/materia", async (req, res) => {
+app.post("/db/materia", authenticateToken,async (req, res) => {
   try {
     const { NombreMateria, eventos, idUsuario } = req.body;
     if (!NombreMateria || !idUsuario) {
@@ -114,24 +113,28 @@ app.post("/db/materia", async (req, res) => {
     
     // Crear eventos asociados
     if (eventos && Array.isArray(eventos)) {
-      for (const evt of eventos) {
-        await Evento.create({
-          tipo: evt.tipo,
-          anioDeCarrera: evt.anioDeCarrera,
-          anio: evt.anio,
-          horaInicio: evt.horaInicio,
-          horaFin: evt.horaFin,
-          correlativas: evt.correlativas,
-          fechaExamen: evt.fechaExamen,
-          notaParcial1: evt.notaParcial1,
-          notaParcial2: evt.notaParcial2,
-          notaFinal: evt.notaFinal,
-          dia: evt.dia,
-          idModalidad: evt.idModalidad,
-          idMateriaUsuario: inscripcion.idMateriaUsuario
-        });
-      }
-    }
+  await Promise.all(eventos.map(evt =>
+    Evento.create({
+  tipo: evt.tipo,
+  anioDeCarrera: evt.anioDeCarrera,
+  anio: evt.anio,
+  horaInicio: evt.horaInicio,
+  horaFin: evt.horaFin,
+  correlativas: evt.correlativas,
+  fechaExamen: evt.fechaExamen,
+  notaParcial1: evt.notaParcial1,
+  notaParcial2: evt.notaParcial2,
+  notaFinal: evt.notaFinal,
+  dia: evt.dia,
+  idModalidad: evt.idModalidad,
+  temasAEstudiar: evt.temasAEstudiar,
+  numero: evt.numero,
+  estado: evt.estado,
+  fechaEntrega: evt.fechaEntrega,
+  idMateriaUsuario: inscripcion.idMateriaUsuario
+})
+  ));
+}
     
     // Retornar la inscripción completa con joins
     const inscripcionCompleta = await MateriaUsuario.findOne({
@@ -190,60 +193,79 @@ app.get("/db/materia/:id", async (req, res) => {
 app.put("/db/materia/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const inscripcion = await MateriaUsuario.findByPk(id, {
-      include: [{ model: Materia, as: "materia" }]
-    });
-    if (!inscripcion) {
-      return res.status(404).json({ error: "Inscripción no encontrada" });
-    }
-    const { NombreMateria, eventos, idUsuario } = req.body;
-    if (NombreMateria && inscripcion.materia.NombreMateria !== NombreMateria) {
-      let materiaNueva = await Materia.findOne({ where: { NombreMateria } });
-      if (!materiaNueva) {
-        materiaNueva = await Materia.create({ NombreMateria });
-      }
-      await inscripcion.update({ idUsuario, idMateria: materiaNueva.idMateria });
+    const { idMateria, eventos, idUsuario } = req.body;
+
+    let inscripcion = await MateriaUsuario.findByPk(id);
+    if (!inscripcion) return res.status(404).json({ error: "Inscripción no encontrada" });
+
+    if (idMateria && inscripcion.idMateria !== idMateria) {
+      const materia = await Materia.findByPk(idMateria);
+      if (!materia) return res.status(400).json({ error: "Materia inválida" });
+      inscripcion = await inscripcion.update({ idMateria, idUsuario });
     } else {
-      await inscripcion.update({ idUsuario });
+      inscripcion = await inscripcion.update({ idUsuario });
     }
-    if (eventos && Array.isArray(eventos)) {
-      await Evento.destroy({ where: { idMateriaUsuario: id } });
-      for (const evt of eventos) {
-        await Evento.create({
-          tipo: evt.tipo,
-          anioDeCarrera: evt.anioDeCarrera,
-          anio: evt.anio,
-          horaInicio: evt.horaInicio,
-          horaFin: evt.horaFin,
-          correlativas: evt.correlativas,
-          fechaExamen: evt.fechaExamen,
-          notaParcial1: evt.notaParcial1,
-          notaParcial2: evt.notaParcial2,
-          notaFinal: evt.notaFinal,
-          dia: evt.dia,
-          idModalidad: evt.idModalidad,
-          idMateriaUsuario: id,
-          numero: evt.numero,
-          temasAEstudiar: evt.temasAEstudiar,
-          estado: evt.estado,
-          fechaEntrega: evt.fechaEntrega
-        });
+
+    if (Array.isArray(eventos)) {
+      const eventosExistentes = await Evento.findAll({ where: { idMateriaUsuario: inscripcion.idMateriaUsuario } });
+      const idsExistentes = eventosExistentes.map(e => e.idEvento);
+      const idsNuevos = eventos.filter(e => e.idEvento).map(e => e.idEvento);
+
+      // Eliminar eventos que ya no existen en la lista enviada
+      const idsAEliminar = idsExistentes.filter(x => !idsNuevos.includes(x));
+      if (idsAEliminar.length) {
+        await Evento.destroy({ where: { idEvento: idsAEliminar } });
+      }
+
+      // Crear o actualizar eventos
+      for (const evento of eventos) {
+        const datosEvento = {
+          tipo: evento.tipo,
+          anioDeCarrera: evento.anioDeCarrera,
+          anio: evento.anio,
+          horaInicio: evento.horaInicio,
+          horaFin: evento.horaFin,
+          correlativas: evento.correlativas,
+          fechaExamen: evento.fechaExamen,
+          notaParcial1: evento.notaParcial1,
+          notaParcial2: evento.notaParcial2,
+          notaFinal: evento.notaFinal,
+          dia: evento.dia,
+          idModalidad: evento.idModalidad,
+          numero: evento.numero,
+          temasAEstudiar: evento.temasAEstudiar,
+          estado: evento.estado,
+          fechaEntrega: evento.fechaEntrega,
+          idMateriaUsuario: inscripcion.idMateriaUsuario // usar id actualizado
+        };
+
+        if (evento.idEvento) {
+          await Evento.update(datosEvento, { where: { idEvento: evento.idEvento } });
+        } else {
+          await Evento.create(datosEvento);
+        }
       }
     }
-    const inscripcionActualizada = await MateriaUsuario.findOne({
-      where: { idMateriaUsuario: id },
+
+    const resultado = await MateriaUsuario.findOne({
+      where: { idMateriaUsuario: inscripcion.idMateriaUsuario },
       include: [
         { model: Materia, as: "materia" },
-        { model: Evento, as: "eventos", include: [{ model: Modalidad, as: "modalidad" }] }
+        {
+          model: Evento,
+          as: "eventos",
+          include: [{ model: Modalidad, as: "modalidad" }]
+        }
       ]
     });
-    res.json(inscripcionActualizada);
+
+    res.json(resultado);
+
   } catch (error) {
     console.error("Error al actualizar la inscripción:", error);
     res.status(500).json({ error: error.message });
   }
 });
-
 
 
 app.delete("/db/materia/:id", async (req, res) => {
@@ -264,15 +286,43 @@ app.delete("/db/materia/:id", async (req, res) => {
   Endpoints para la Tabla Global de Materia
 ===========================================*/
 
+// GET /db/materias/global  – solo Vigentes por defecto
 app.get("/db/materias/global", async (req, res) => {
   try {
-    const materias = await Materia.findAll();
+    const includeAll = req.query.includeAll === 'true';
+    const where = includeAll ? {} : { estado: 'Vigente' };
+    const materias = await Materia.findAll({ where });
     res.json(materias);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.patch("/db/materia/global/:id/estado", authenticateToken,verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body; // 'Vigente' | 'No Vigente'
+
+    if (!['Vigente', 'No Vigente'].includes(estado))
+      return res.status(400).json({ error: "Estado inválido" });
+
+    const materia = await Materia.findByPk(id);
+    if (!materia) return res.status(404).json({ error: "Materia no encontrada" });
+
+    await materia.update({ estado });
+    res.json({ message: "Estado actualizado", materia });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ahora con authenticateToken + verifyAdmin
+app.post(
+  "/db/materia/global",
+  authenticateToken,
+  verifyAdmin,
+  async (req, res) => {
+    const { NombreMateria } = req.body;
+    const materia = await Materia.create({ NombreMateria, estado:'Vigente' });
+    res.status(201).json(materia);
+  }
+);
 app.post("/db/materia/global", async (req, res) => {
   try {
     const { NombreMateria } = req.body;
@@ -285,6 +335,23 @@ app.post("/db/materia/global", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.patch("/db/materia/global/:id/estado", verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body; // 'Vigente' | 'No Vigente'
+
+    if (!['Vigente', 'No Vigente'].includes(estado))
+      return res.status(400).json({ error: "Estado inválido" });
+
+    const materia = await Materia.findByPk(id);
+    if (!materia) return res.status(404).json({ error: "Materia no encontrada" });
+
+    await materia.update({ estado });
+    res.json({ message: "Estado actualizado", materia });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 
 /*===========================================
   Endpoints para la Tabla de Modalidad
@@ -357,7 +424,7 @@ async function createUser(userData) {
   Endpoints para Usuarios (Administración)
 ===========================================*/
 
-app.get("/db/usuarios/:id", verifyAdmin, async (req, res) => {
+app.get("/db/usuarios/:id", authenticateToken,verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const usuario = await User.findByPk(id);
@@ -371,7 +438,7 @@ app.get("/db/usuarios/:id", verifyAdmin, async (req, res) => {
 });
 
 // NOTA: Este endpoint permite crear usuarios, incluido administradores, SOLO si se pasa el middleware verifyAdmin.
-app.post("/db/usuarios", verifyAdmin, async (req, res) => {
+app.post("/db/usuarios", authenticateToken,verifyAdmin, async (req, res) => {
   try {
     const newUser = await createUser(req.body);
     res.status(201).json({ message: "Usuario creado", user: newUser });
@@ -380,7 +447,7 @@ app.post("/db/usuarios", verifyAdmin, async (req, res) => {
   }
 });
 
-app.delete("/db/usuarios/:id", verifyAdmin, async (req, res) => {
+app.delete("/db/usuarios/:id", authenticateToken,verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const rowsDeleted = await User.destroy({ where: { id } });
@@ -393,7 +460,7 @@ app.delete("/db/usuarios/:id", verifyAdmin, async (req, res) => {
   }
 });
 
-app.put("/db/usuarios/:id", verifyAdmin, async (req, res) => {
+app.put("/db/usuarios/:id", authenticateToken,verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, rol, password } = req.body;

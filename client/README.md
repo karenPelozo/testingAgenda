@@ -17,6 +17,13 @@ npm install cors
 ## Ejecutamos el servidor
 npm run dev
 
+## Swagger
+http://localhost:3000/api-docs
+
+## en caso que haya que reinstalar el package.json
+rm -rf node_modules package-lock.json  # Elimina las dependencias y el archivo lock
+npm install  # Reinstala todas las dependencias
+
 # endpoint de ejemplo
 
 {

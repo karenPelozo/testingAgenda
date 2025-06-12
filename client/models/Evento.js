@@ -62,7 +62,7 @@ const Evento = sequelize.define("Evento", {
     allowNull: true,
   },
   temasAEstudiar: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     allowNull: true,
   },
   estado: {
@@ -81,5 +81,6 @@ const Evento = sequelize.define("Evento", {
   tableName: "eventos",
   timestamps: false,
 });
+
 
 module.exports = Evento;

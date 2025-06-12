@@ -3,7 +3,7 @@
   "info": {
     "title": "API Agenda Académica UNPAZ",
     "version": "1.0.0",
-    "description": "API para gestión de usuarios, materias, inscripciones y eventos."
+    "description": "Gestión de usuarios, materias, inscripciones y eventos."
   },
   "servers": [
     {
@@ -11,10 +11,89 @@
       "description": "Servidor local"
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-admin"
+      }
+    }
+  },
+  "security": [
+    {
+      "api_key": []
+    }
+  ],
   "paths": {
     "/register": {
       "post": {
         "summary": "Registrar nuevo usuario",
+        "description": "Registra un usuario. No permite rol 'administrador'.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "password": { "type": "string" },
+                  "rol": { "type": "string" }
+                },
+                "required": ["nombre", "password", "rol"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Usuario registrado exitosamente" },
+          "400": { "description": "Faltan datos obligatorios" },
+          "403": { "description": "No se permite rol administrador" },
+          "500": { "description": "Error del servidor" }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Iniciar sesión",
+        "description": "Valida credenciales y devuelve datos de usuario.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["nombre", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login exitoso" },
+          "400": { "description": "Faltan campos obligatorios" },
+          "401": { "description": "Usuario no encontrado o contraseña incorrecta" },
+          "500": { "description": "Error del servidor" }
+        }
+      }
+    },
+    "/db/usuarios": {
+      "get": {
+        "summary": "Listar usuarios",
+        "security": [{ "api_key": [] }],
+        "responses": {
+          "200": { "description": "Lista de usuarios" },
+          "403": { "description": "Acceso denegado" },
+          "500": { "description": "Error del servidor" }
+        }
+      },
+      "post": {
+        "summary": "Crear usuario (admin)",
+        "security": [{ "api_key": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -33,13 +112,42 @@
         },
         "responses": {
           "201": { "description": "Usuario creado exitosamente" },
-          "400": { "description": "Faltan datos obligatorios" }
+          "400": { "description": "Error de validación o usuario ya existe" },
+          "403": { "description": "Acceso denegado" },
+          "500": { "description": "Error del servidor" }
         }
       }
     },
-    "/login": {
-      "post": {
-        "summary": "Iniciar sesión",
+    "/db/usuarios/{id}": {
+      "get": {
+        "summary": "Obtener usuario por ID",
+        "security": [{ "api_key": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Usuario encontrado" },
+          "404": { "description": "Usuario no encontrado" },
+          "403": { "description": "Acceso denegado" },
+          "500": { "description": "Error del servidor" }
+        }
+      },
+      "put": {
+        "summary": "Actualizar usuario",
+        "security": [{ "api_key": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -48,103 +156,42 @@
                 "type": "object",
                 "properties": {
                   "nombre": { "type": "string" },
+                  "rol": { "type": "string" },
                   "password": { "type": "string" }
-                },
-                "required": ["nombre", "password"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Inicio de sesión exitoso" },
-          "401": { "description": "Credenciales inválidas" }
-        }
-      }
-    },
-    "/materias": {
-      "get": {
-        "summary": "Obtener todas las materias",
-        "responses": {
-          "200": { "description": "Lista de materias" }
-        }
-      },
-      "post": {
-        "summary": "Crear una nueva materia",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "nombre": { "type": "string" },
-                  "descripcion": { "type": "string" }
-                },
-                "required": ["nombre", "descripcion"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Materia creada exitosamente" }
-        }
-      }
-    },
-    "/materias/{id}": {
-      "put": {
-        "summary": "Actualizar una materia",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "nombre": { "type": "string" },
-                  "descripcion": { "type": "string" }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Materia actualizada" },
-          "404": { "description": "Materia no encontrada" }
+          "200": { "description": "Usuario actualizado correctamente" },
+          "404": { "description": "Usuario no encontrado" },
+          "403": { "description": "Acceso denegado" },
+          "500": { "description": "Error del servidor" }
         }
       },
       "delete": {
-        "summary": "Eliminar una materia",
+        "summary": "Eliminar usuario",
+        "security": [{ "api_key": [] }],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "integer" }
           }
         ],
         "responses": {
-          "200": { "description": "Materia eliminada" },
-          "404": { "description": "Materia no encontrada" }
+          "200": { "description": "Usuario eliminado correctamente" },
+          "404": { "description": "Usuario no encontrado" },
+          "403": { "description": "Acceso denegado" },
+          "500": { "description": "Error del servidor" }
         }
       }
     },
-    "/inscripciones": {
-      "get": {
-        "summary": "Obtener todas las inscripciones",
-        "responses": {
-          "200": { "description": "Lista de inscripciones" }
-        }
-      },
+    "/db/materia": {
       "post": {
-        "summary": "Crear una inscripción",
+        "summary": "Crear inscripción con eventos",
         "requestBody": {
           "required": true,
           "content": {
@@ -152,58 +199,172 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "estudianteId": { "type": "string" },
-                  "materiaId": { "type": "string" }
+                  "NombreMateria": { "type": "string" },
+                  "idUsuario": { "type": "integer" },
+                  "eventos": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tipo": { "type": "string" },
+                        "anioDeCarrera": { "type": "integer" },
+                        "anio": { "type": "integer" },
+                        "dia": { "type": "string" },
+                        "horaInicio": { "type": "string" },
+                        "horaFin": { "type": "string" },
+                        "correlativas": { "type": "string" },
+                        "fechaExamen": { "type": "string", "format": "date" },
+                        "notaParcial1": { "type": "number" },
+                        "notaParcial2": { "type": "number" },
+                        "notaFinal": { "type": "number" },
+                        "idModalidad": { "type": "integer" },
+                        "numero": { "type": "integer" },
+                        "temasAEstudiar": { "type": "string" },
+                        "estado": { "type": "string" },
+                        "fechaEntrega": { "type": "string", "format": "date" }
+                      }
+                    }
+                  }
                 },
-                "required": ["estudianteId", "materiaId"]
+                "required": ["NombreMateria", "idUsuario"]
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Inscripción creada exitosamente" }
+          "201": { "description": "Inscripción creada exitosamente" },
+          "400": { "description": "Faltan campos obligatorios" },
+          "500": { "description": "Error del servidor" }
         }
       }
     },
-    "/eventos": {
+    "/db/materias": {
       "get": {
-        "summary": "Obtener todos los eventos",
+        "summary": "Listar inscripciones de un usuario",
+        "parameters": [
+          {
+            "name": "idUsuario",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
         "responses": {
-          "200": { "description": "Lista de eventos" }
+          "200": { "description": "Lista de inscripciones" },
+          "400": { "description": "No se especificó idUsuario" },
+          "500": { "description": "Error del servidor" }
+        }
+      }
+    },
+    "/db/materia/{id}": {
+      "get": {
+        "summary": "Obtener inscripción por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Inscripción encontrada" },
+          "404": { "description": "Inscripción no encontrada" },
+          "500": { "description": "Error del servidor" }
         }
       },
-      "post": {
-        "summary": "Crear un evento",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "titulo": { "type": "string" },
-                  "fecha": { "type": "string", "format": "date" },
-                  "descripcion": { "type": "string" }
-                },
-                "required": ["titulo", "fecha", "descripcion"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Evento creado exitosamente" }
-        }
-      }
-    },
-    "/eventos/{id}": {
       "put": {
-        "summary": "Actualizar un evento",
+        "summary": "Actualizar inscripción y eventos",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Inscripción actualizada" },
+          "404": { "description": "Inscripción no encontrada" },
+          "500": { "description": "Error del servidor" }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar inscripción y eventos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Inscripción eliminada" },
+          "404": { "description": "Inscripción no encontrada" },
+          "500": { "description": "Error del servidor" }
+        }
+      }
+    },
+    "/db/materias/global": {
+      "get": {
+        "summary": "Listar materias globales",
+        "parameters": [
+          {
+            "name": "includeAll",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Lista de materias" },
+          "500": { "description": "Error del servidor" }
+        }
+      }
+    },
+    "/db/materia/global": {
+      "post": {
+        "summary": "Crear nueva materia global",
+        "security": [{ "api_key": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "NombreMateria": { "type": "string" }
+                },
+                "required": ["NombreMateria"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Materia creada exitosamente" },
+          "400": { "description": "Faltan datos obligatorios" },
+          "500": { "description": "Error del servidor" }
+        }
+      }
+    },
+    "/db/materia/global/{id}/estado": {
+      "patch": {
+        "summary": "Cambiar estado de materia",
+        "security": [{ "api_key": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
           }
         ],
         "requestBody": {
@@ -213,32 +374,67 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "titulo": { "type": "string" },
-                  "fecha": { "type": "string", "format": "date" },
-                  "descripcion": { "type": "string" }
-                }
+                  "estado": { "type": "string", "enum": ["Vigente", "No Vigente"] }
+                },
+                "required": ["estado"]
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Evento actualizado" },
-          "404": { "description": "Evento no encontrado" }
+          "200": { "description": "Estado actualizado" },
+          "400": { "description": "Estado inválido" },
+          "404": { "description": "Materia no encontrada" },
+          "500": { "description": "Error del servidor" }
+        }
+      }
+    },
+    "/db/modalidades": {
+      "get": {
+        "summary": "Listar modalidades",
+        "responses": {
+          "200": { "description": "Lista de modalidades" },
+          "500": { "description": "Error del servidor" }
         }
       },
-      "delete": {
-        "summary": "Eliminar un evento",
+      "post": {
+        "summary": "Crear modalidad",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tipoModalidad": { "type": "string" }
+                },
+                "required": ["tipoModalidad"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Modalidad creada exitosamente" },
+          "400": { "description": "Faltan datos obligatorios" },
+          "500": { "description": "Error del servidor" }
+        }
+      }
+    },
+    "/db/correlativas/{idMateria}": {
+      "get": {
+        "summary": "Obtener correlativas de una materia",
         "parameters": [
           {
-            "name": "id",
+            "name": "idMateria",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "integer" }
           }
         ],
         "responses": {
-          "200": { "description": "Evento eliminado" },
-          "404": { "description": "Evento no encontrado" }
+          "200": { "description": "Lista de correlativas" },
+          "404": { "description": "Materia no encontrada" },
+          "500": { "description": "Error del servidor" }
         }
       }
     }

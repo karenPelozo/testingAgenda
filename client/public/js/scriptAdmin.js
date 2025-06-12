@@ -1,153 +1,259 @@
-// Cargar lista de usuarios
-function cargarUsuarios() {
-  const tbody = document.getElementById("tablaUsuarios").querySelector("tbody");
+/***********************************************
+ *         scriptAdmin.js – Admin Panel        *
+ ***********************************************/
 
-  fetch("/db/usuarios", { headers: { "x-admin": "true" } })
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data)) {
-        tbody.innerHTML = "";
-        data.forEach(usuario => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${usuario.id}</td>
-            <td>${usuario.nombre}</td>
-            <td>${usuario.rol}</td>
-            <td>
-              <button onclick="editarUsuario(${usuario.id})" class="btn btn-warning">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button onclick="eliminarUsuario(${usuario.id})" class="btn btn-danger">
-                <i class="bi bi-trash"></i>
-              </button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } else {
-        console.error("Respuesta inesperada:", data);
-      }
-    })
-    .catch(err => console.error("Error al cargar usuarios:", err));
+// ——— 1 · Helper para JWT ———
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`
+  };
 }
 
-// Guardar nuevo usuario
-function guardarUsuario() {
-  const nombre = document.getElementById("nombreUsuario").value;
-  const password = document.getElementById("passwordUsuario").value;
-  const rol = document.getElementById("rolUsuario").value;
-
-  if (!nombre || !password || !rol) {
-    alert("Complete todos los campos.");
+// ——— 2 · DOMContentLoaded ———
+document.addEventListener("DOMContentLoaded", () => {
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  if (!user) {
+    // Si no hay sesión activa, vuelvo al login
+    window.location.href = "index.html";
     return;
+  }
+  // Cargo tablas
+  cargarUsuarios();
+  cargarMateriasAdmin();
+});
+
+// ——— 3 · CRUD USUARIOS ———
+
+// 3.1 Listar usuarios (GET /db/usuarios)
+function cargarUsuarios() {
+  const tbody = document.querySelector("#tablaUsuarios tbody");
+  fetch("/db/usuarios", { headers: authHeaders() })
+    .then(res => {
+      if (!res.ok) throw new Error("Token inválido o no eres admin");
+      return res.json();
+    })
+    .then(data => {
+      tbody.innerHTML = "";
+      data.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.id}</td>
+          <td>${u.nombre}</td>
+          <td>${u.rol}</td>
+          <td>
+            <button class="btn btn-warning" onclick="editarUsuario(${u.id})">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-danger" onclick="eliminarUsuario(${u.id})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(err => alert("Error al cargar usuarios: " + err.message));
+}
+
+// 3.2 Crear usuario (POST /db/usuarios)
+function guardarUsuario() {
+  const nombre   = document.getElementById("nombreUsuario").value.trim();
+  const password = document.getElementById("passwordUsuario").value;
+  const rol      = document.getElementById("rolUsuario").value;
+  if (!nombre || !password || !rol) {
+    return alert("Complete todos los campos.");
   }
 
   fetch("/db/usuarios", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-admin": "true"
-    },
+    headers: authHeaders(),
     body: JSON.stringify({ nombre, password, rol })
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        alert("Error: " + data.error);
-      } else {
-        alert("Usuario creado exitosamente.");
-        cargarUsuarios(); // Recargar la lista
-        document.getElementById("formUsuario").reset();
-      }
+    .then(res => {
+      if (!res.ok) return res.json().then(e => { throw new Error(e.error); });
+      return res.json();
     })
-    .catch(err => console.error("Error al guardar usuario:", err));
+    .then(() => {
+      Swal.fire({
+  icon: "success",
+  title: "¡Listo!",
+  text: "Usuario creado correctamente",
+  timer: 2000,
+  showConfirmButton: false
+});
+      document.getElementById("formUsuario").reset();
+      cargarUsuarios();
+    })
+    .catch(err => alert("Error al crear usuario: " + err.message));
 }
 
-// Editar usuario (cargar datos en el modal)
+// 3.3 Cargar usuario en modal (GET /db/usuarios/:id)
 function editarUsuario(id) {
-  fetch(`/db/usuarios/${id}`, { headers: { "x-admin": "true" } })
-    .then(res => res.json())
-    .then(usuario => {
-      document.getElementById("editNombreUsuario").value = usuario.nombre;
-      document.getElementById("editRolUsuario").value = usuario.rol;
-      document.getElementById("editPasswordUsuario").value = ""; // Campo vacío por seguridad
-      
-      document.getElementById("modalEditarUsuario").setAttribute("data-user-id", id);
-      
+  fetch(`/db/usuarios/${id}`, { headers: authHeaders() })
+    .then(res => {
+      if (!res.ok) throw new Error("No autorizado");
+      return res.json();
+    })
+    .then(u => {
+      document.getElementById("editNombreUsuario") .value = u.nombre;
+      document.getElementById("editRolUsuario")    .value = u.rol;
+      document.getElementById("editPasswordUsuario").value = "";
+      document.getElementById("modalEditarUsuario")
+              .setAttribute("data-user-id", id);
       abrirModalEditarUsuario();
     })
-    .catch(err => console.error("Error al cargar usuario:", err));
+    .catch(err => alert("Error al cargar usuario: " + err.message));
 }
 
-// Guardar edición del usuario
+// 3.4 Guardar edición (PUT /db/usuarios/:id)
 function guardarEdicionUsuario() {
-  const id = document.getElementById("modalEditarUsuario").getAttribute("data-user-id");
-  const nombre = document.getElementById("editNombreUsuario").value;
-  const rol = document.getElementById("editRolUsuario").value;
-  const password = document.getElementById("editPasswordUsuario").value;
+  const modal = document.getElementById("modalEditarUsuario");
+  const id    = modal.getAttribute("data-user-id");
+  const nombre = document.getElementById("editNombreUsuario").value.trim();
+  const rol    = document.getElementById("editRolUsuario").value;
+  const pass   = document.getElementById("editPasswordUsuario").value;
 
   if (!nombre || !rol) {
-    alert("Todos los campos son obligatorios.");
-    return;
+    return alert("Nombre y rol son obligatorios.");
   }
 
-  const datosUsuario = { nombre, rol };
-  if (password) {
-    datosUsuario.password = password; // Solo envía la nueva contraseña si se ingresó
-  }
+  const body = { nombre, rol };
+  if (pass) body.password = pass;
 
   fetch(`/db/usuarios/${id}`, {
     method: "PUT",
-    headers: { 
-      "Content-Type": "application/json", 
-      "x-admin": "true"
-    },
-    body: JSON.stringify(datosUsuario)
+    headers: authHeaders(),
+    body: JSON.stringify(body)
   })
     .then(res => res.json())
-    .then(data => {
-      alert("Usuario actualizado correctamente.");
+    .then(() => {
+      alert("Usuario actualizado");
       cerrarModalEditarUsuario();
-      cargarUsuarios(); // Recargar la lista de usuarios
+      cargarUsuarios();
     })
-    .catch(err => console.error("Error al actualizar usuario:", err));
+    .catch(err => alert("Error al actualizar usuario: " + err.message));
 }
 
-// Eliminar usuario
+// 3.5 Eliminar usuario (DELETE /db/usuarios/:id) con SweetAlert2
 function eliminarUsuario(id) {
-  if (confirm("¿Está seguro de eliminar este usuario?")) {
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: "Esta acción no se puede deshacer.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    // Si confirma, guardo
     fetch(`/db/usuarios/${id}`, {
       method: "DELETE",
-      headers: { "x-admin": "true" }
+      headers: authHeaders()
     })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || "Usuario eliminado.");
+      .then(res => {
+        if (!res.ok) throw new Error('No se pudo eliminar');
+        return res.json();
+      })
+      .then(() => {
+        // Notificación de éxito
+        Swal.fire({
+          icon: 'success',
+          title: 'Eliminado',
+          text: 'El usuario fue eliminado correctamente',
+          timer: 1500,
+          showConfirmButton: false
+        });
         cargarUsuarios();
       })
-      .catch(err => console.error("Error al eliminar usuario:", err));
-  }
+      .catch(err => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo eliminar el usuario',
+        });
+        console.error(err);
+      });
+  });
 }
 
-// Mostrar el modal de edición
+// Modal usuarios
 function abrirModalEditarUsuario() {
   document.getElementById("modalEditarUsuario").classList.add("active");
-  document.getElementById("modalBackdrop").classList.add("active");
+  document.getElementById("modalBackdrop")      .classList.add("active");
 }
-
-// Cerrar el modal de edición (solución al problema de cierre)
 function cerrarModalEditarUsuario() {
-  const modal = document.getElementById("modalEditarUsuario");
-  const backdrop = document.getElementById("modalBackdrop");
-
-  modal.classList.remove("active");
-  backdrop.classList.remove("active");
-
-  setTimeout(() => {
-    modal.style.display = "none";
-    backdrop.style.display = "none";
-  }, 300); // Espera 300ms para efectos visuales
+  const m = document.getElementById("modalEditarUsuario"),
+        b = document.getElementById("modalBackdrop");
+  m.classList.remove("active");
+  b.classList.remove("active");
+  setTimeout(() => { m.style.display = b.style.display = "none"; }, 300);
 }
 
-// Al cargar la página, invoca la lista de usuarios
-window.onload = cargarUsuarios;
+// ——— 4 · CRUD MATERIAS GLOBALES (admin) ———
+
+// 4.1 Listar materias
+function cargarMateriasAdmin() {
+  const tbody = document.querySelector("#tablaMaterias tbody");
+  fetch("/db/materias/global?includeAll=true", { headers: authHeaders() })
+    .then(res => res.json())
+    .then(data => {
+      tbody.innerHTML = "";
+      data.forEach(m => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${m.idMateria}</td>
+          <td>${m.NombreMateria}</td>
+          <td>${m.estado}</td>
+          <td>
+            <button onclick="toggleEstadoMateria(${m.idMateria}, '${m.estado}')"
+                    class="btn btn-sm ${m.estado==='Vigente'?'btn-warning':'btn-success'}">
+              <i class="bi ${m.estado==='Vigente'?'bi-toggle-off':'bi-toggle-on'}"></i>
+              ${m.estado==='Vigente'?'Dar baja':'Reactivar'}
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(err => alert("Error al cargar materias: " + err.message));
+}
+
+// 4.2 Crear materia
+function guardarMateria() {
+  const nombre = document.getElementById("nombreMateria").value.trim();
+  if (!nombre) return alert("Ingrese nombre de materia");
+  fetch("/db/materia/global", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ NombreMateria: nombre })
+  })
+    .then(res => res.json())
+    .then(() => {
+      document.getElementById("formMateria").reset();
+      cargarMateriasAdmin();
+    })
+    .catch(err => alert("Error al crear materia: " + err.message));
+}
+
+// 4.3 Cambiar estado
+function toggleEstadoMateria(id, actual) {
+  const nuevo = actual === "Vigente" ? "No Vigente" : "Vigente";
+  fetch(`/db/materia/global/${id}/estado`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify({ estado: nuevo })
+  })
+    .then(res => res.json())
+    .then(() => cargarMateriasAdmin())
+    .catch(err => alert("Error al cambiar estado: " + err.message));
+}
+
+// ——— 5 · Logout ———
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
+}
