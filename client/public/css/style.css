@@ -360,3 +360,23 @@ footer p {
   margin: 10px 0;
   line-height: 1.5;
 }
+
+#btnCerrarSesion {
+  background-color: #e74c3c; /* Rojo vibrante */
+  color: #fff; /* Texto blanco */
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px; /* Bordes redondeados */
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#btnCerrarSesion:hover {
+  background-color: #c0392b; /* Tono más oscuro al pasar el mouse */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+#btnCerrarSesion:active {
+  transform: scale(0.98); /* Efecto de "presionar" */
+}
