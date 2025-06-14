@@ -1,4 +1,4 @@
-// controllers/eventoController.jsAdd commentMore actions
+// controllers/eventoController.js
 const moment = require("moment");
 const { Evento } = require("../../../models/index");
 

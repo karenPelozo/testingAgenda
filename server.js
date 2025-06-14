@@ -27,7 +27,8 @@ const { Materia, Modalidad, MateriaUsuario, Evento } = require('./client/models/
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "client", "public")));
-app.use("/notificaciones", notificacionesRoute);
+app.use("/notificaciones", authenticateToken, notificacionesRoute);
+
 
 // Ruta raíz: enviar index.html
 app.get("/", (req, res) => {

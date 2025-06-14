@@ -13,56 +13,113 @@ function authHeaders() {
 
 // ——— 3 · DOM Ready ———
 document.addEventListener("DOMContentLoaded", () => {
-  // 3.1 Recuperar sesión
+  // —— 0) Referencias a nodos clave ——
+  const loginModal       = document.getElementById("login-modal");
+  const logoutBtn        = document.getElementById("logoutBtn");
+  const btnOpenForm      = document.getElementById("btnOpenForm");
+  const btnCancelar      = document.getElementById("btnCancelar");
+  const btnGuardar       = document.getElementById("btnGuardar");
+  const btnAgregarEvento = document.getElementById("btnAgregarEvento");
+  const btnNotif         = document.getElementById("btnNotifications");
+  const panelNotif       = document.getElementById("notificationsList");
+  const btnImprimir      = document.getElementById("btnImprimir");
+
+  // —— 1) Mostrar login u ocultarlo según sesión ——
   const userJson = localStorage.getItem("user");
   if (!userJson) {
-    // si no hay usuario, muestro el login y salgo
-    const loginModal = document.getElementById("login-modal");
     if (loginModal) loginModal.style.display = "flex";
-    return;
+  } else {
+    // ya logueado
+    const user = JSON.parse(userJson);
+    loggedUserId = user.id;
+
+    if (loginModal) loginModal.style.display = "none";
+    if (logoutBtn)  logoutBtn.style.display  = "inline-block";
+
+    if (user.rol.toLowerCase() === "administrador") {
+      cargarUsuarios();
+      cargarMateriasAdmin();
+    }
+
+    populateMateriasSelect();
+    populateModalidadesSelect();
+    loadMaterias();
   }
 
-  // 3.2 Si hay usuario, cargo sus datos
-  const user = JSON.parse(userJson);
-  loggedUserId = user.id;
-
-  // ocultar modal login
-  const loginModal = document.getElementById("login-modal");
-  if (loginModal) loginModal.style.display = "none";
-
-  // mostrar botón logout
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) logoutBtn.style.display = "inline-block";
-
-  // si es admin, cargo el panel admin
-  if (user.rol.toLowerCase() === "administrador") {
-    cargarUsuarios();
-    cargarMateriasAdmin();
+  // —— 2) Listeners del formulario ——  
+  if (btnOpenForm) {
+    btnOpenForm.addEventListener("click", openFormModal);
+  }
+  if (btnCancelar) {
+    btnCancelar.addEventListener("click", e => {
+      e.preventDefault();
+      closeFormModal();
+      editingInscripcionId = null;
+    });
+  }
+  if (btnGuardar) {
+    btnGuardar.addEventListener("click", saveMateria);
+  }
+  if (btnAgregarEvento) {
+    btnAgregarEvento.addEventListener("click", agregarEvento);
   }
 
-  // siempre cargo selects y materias de alumno
-  populateMateriasSelect();
-  populateModalidadesSelect();
-  loadMaterias();
+  // —— 3) Notificaciones ——  
+  if (btnNotif && panelNotif) {
+    btnNotif.addEventListener("click", async () => {
+      const isOpen = panelNotif.style.display === "block";
+      panelNotif.style.display = isOpen ? "none" : "block";
 
-  // enlazo botones del formulario
-  const btnOpenForm     = document.getElementById("btnOpenForm");
-  const btnCancelar     = document.getElementById("btnCancelar");
-  const btnGuardar      = document.getElementById("btnGuardar");
-  const btnAgregarEvento= document.getElementById("btnAgregarEvento");
+      if (!isOpen) {
+        try {
+          const eventos = await fetch("/notificaciones")
+            .then(r => { if (!r.ok) throw r; return r.json(); });
+          mostrarEventosEnNotificaciones(eventos);
+        } catch (err) {
+          console.error("Error al traer notificaciones:", err);
+        }
+      }
+    });
+  }
 
-  if (btnOpenForm)        btnOpenForm.addEventListener("click", openFormModal);
- if (btnCancelar) {
-  btnCancelar.addEventListener("click", e => {
-    e.preventDefault();
-    console.log("➖ Cancelar pulsado");
-    closeFormModal();
-    editingInscripcionId = null;
-  });
-}
-  if (btnGuardar)         btnGuardar.addEventListener("click", saveMateria);
-  if (btnAgregarEvento)   btnAgregarEvento.addEventListener("click", agregarEvento);
+  // —— 4) Imprimir PDF ——  
+  if (btnImprimir) {
+    btnImprimir.addEventListener("click", () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("p","pt","a4");
+
+      // Título
+      doc.setFontSize(18);
+      doc.text("Reporte de Materias y Eventos", 40, 50);
+
+      // Armado de tabla
+      const head = [["Materia","Año","Modalidad","Eventos"]];
+      const body = [];
+      document
+        .querySelectorAll("#materiasTable tbody tr")
+        .forEach(tr => {
+          const td = tr.querySelectorAll("td");
+          body.push([
+            td[0]?.textContent || "N/A",
+            td[1]?.textContent || "",
+            td[4]?.textContent || "",
+            td[6]?.textContent || "—"
+          ]);
+        });
+
+      doc.autoTable({
+        startY: 80,
+        head: head,
+        body: body,
+        theme: "grid",
+        styles: { fontSize: 11, cellPadding: 4 }
+      });
+
+      doc.save("reporte-materias.pdf");
+    });
+  }
 });
+
 
 function login() {
   const nombre   = document.getElementById("username").value;
@@ -718,23 +775,59 @@ function eliminarUsuario(id) {
   }
 }
 
-/* ============================Add commentMore actions
+/* ============================
    Función de notificaciones
 ============================ */
 
-async function obtenerProximosEventos() {
-  try {
-    const response = await fetch('/api/eventos/proximos');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const eventos = await response.json();
-    return eventos;
-  } catch (error) {
-    console.error('Error al obtener eventos:', error);
-    return [];
+
+/**
+ * Muestra dentro de #notificationsList los eventos recibidos
+ * @param {Array} eventos — arreglo de objetos { tipo, fechaEntrega, fechaExamen, dia … }
+ */
+function mostrarEventosEnNotificaciones(eventos) {
+  const panel = document.getElementById('notificationsList');
+  if (!panel) return console.error('No existe #notificationsList');
+
+  // Limpio contenido previo
+  panel.innerHTML = '';
+
+  if (!Array.isArray(eventos) || eventos.length === 0) {
+    panel.innerHTML = '<p>No hay eventos próximos.</p>';
+    return;
   }
+
+  // Creo una lista de notificaciones
+  const ul = document.createElement('ul');
+  ul.style.listStyle = 'none';
+  ul.style.padding = '0';
+
+  eventos.forEach(ev => {
+    const li = document.createElement('li');
+    li.style.marginBottom = '0.5em';
+
+    // Ejemplo de líneas que podés ajustar
+    const fecha = ev.fechaEntrega || ev.fechaExamen || 'Fecha desconocida';
+    li.innerHTML = `
+      <strong>${ev.tipo}</strong><br>
+      <small>${fecha} · Día: ${ev.dia || '–'}</small>
+    `;
+    ul.appendChild(li);
+  });
+
+  panel.appendChild(ul);
 }
+
+
+async function obtenerProximosEventos() {
+  const res = await fetch("/notificaciones", {
+    headers: authHeaders()
+  });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 
 document.getElementById('btnNotifications').addEventListener('click', async () => {
   const panel = document.getElementById('notificationsList');
@@ -746,5 +839,53 @@ document.getElementById('btnNotifications').addEventListener('click', async () =
     panel.style.display = 'none';
   }
 });
+
+
+
+
+
+
+/* ============================
+   Función de reporte
+============================ */
+
+
+document.getElementById("btnImprimir").addEventListener("click", () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Título
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("Reporte de Materias y Eventos", 15, 20);
+
+  // Datos de la grilla
+  const headers = ["Materia", "Año", "Modalidad", "Eventos"];
+  const rows = [];
+
+  document.querySelectorAll("#materiasTable tbody tr").forEach(tr => {
+    const cells = tr.querySelectorAll("td");
+    const eventos = cells[6]?.textContent || "Sin eventos"; 
+    rows.push([
+      cells[0]?.textContent || "N/A",  // Materia
+      cells[1]?.textContent || "",     // Año
+      cells[4]?.textContent || "",     // Modalidad
+      eventos                           // Eventos
+    ]);
+  });
+
+  // Generar tabla
+  doc.autoTable({
+    startY: 30,
+    head: [headers],
+    body: rows,
+    theme: "grid",
+    styles: { fontSize: 12 }
+  });
+
+  // Descargar el PDF
+  doc.save("reporte-materias.pdf");
+});
+
 
 

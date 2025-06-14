@@ -5,6 +5,9 @@
   <title>Agenda de Materias</title>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
   <link rel="stylesheet" href="css/style.css">
   <!-- Agregar Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
@@ -32,6 +35,11 @@
   <div class="header-container">
     <h1>Agenda de Materias</h1>
     <button id="btnCerrarSesion" onclick="logout()">Cerrar sesión</button>
+<button id="btnImprimir">🖨️ Imprimir Reporte</button>
+<button id="btnNotifications">Notificaciones</button>
+<div id="notificationsList" style="display:none;"></div>
+
+
     <span id="btnInfo" onclick="showInfo()" title="Acerca de mí">
       <i class="bi bi-info-circle-fill"></i>
     </span>
