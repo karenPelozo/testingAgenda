@@ -12,9 +12,9 @@ function authHeaders() {
 }
 
 // ——— 3 · DOM Ready ———
-/* ——— DOM Ready: Un solo bloque ———*/
+
 document.addEventListener("DOMContentLoaded", () => {
-  // — Referencias DOM —
+
   const loginModal        = document.getElementById("login-modal");
   const logoutBtn         = document.getElementById("logoutBtn");
   const btnOpenForm       = document.getElementById("btnOpenForm");
@@ -148,7 +148,35 @@ document.addEventListener("DOMContentLoaded", () => {
       doc.save("reporte-materias.pdf");
     });
   }
+
+
+
+//Calcular nota final
+
+ function calcularNotaFinal() {
+    // Obtener valores como números válidos
+    const np1 = Number(notaParcial1.value.trim()) || 0;
+    const np2 = Number(notaParcial2.value.trim()) || 0;
+
+    // Validar notas antes de calcular
+    if (np1 < 7 || np2 < 7) {
+      notaFinal.value = ""; // Lo vacía
+      notaFinal.placeholder = "Debe recuperar"; // Mensaje visible pero no rompe input
+      return;
+    }
+
+    // Si ambas notas >=7, calcular promedio redondeado arriba
+    const promedio = (np1 + np2) / 2;
+    notaFinal.value = Math.ceil(promedio);
+  }
+
+  if (notaParcial1 && notaParcial2 && notaFinal) {
+    notaParcial1.addEventListener("input", calcularNotaFinal);
+    notaParcial2.addEventListener("input", calcularNotaFinal);
+  }
 });
+
+
 
 
 
