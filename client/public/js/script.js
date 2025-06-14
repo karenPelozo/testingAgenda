@@ -658,7 +658,7 @@ function getMateriaFromForm() {
   };
 }
 
-function saveMateria() {
+/*function saveMateria() {
   const materiaData = getMateriaFromForm();
 
   const url    = editingInscripcionId
@@ -678,6 +678,47 @@ function saveMateria() {
     .then(() => {
       loadMaterias();
       loadStats(); 
+      closeFormModal();
+      editingInscripcionId = null;
+    })
+    .catch(err => console.error("Error al guardar materia:", err));
+}*/
+
+function saveMateria() {
+  // 1) Validación front-end
+  const selMat = document.getElementById("NombreMateria");
+  const selMod = document.getElementById("idModalidad");
+  if (!selMat.value) {
+    Swal.fire("Atención", "Debes seleccionar una materia", "warning");
+    selMat.focus();
+    return;
+  }
+  if (!selMod.value) {
+    Swal.fire("Atención", "Debes seleccionar una modalidad", "warning");
+    selMod.focus();
+    return;
+  }
+
+  // 2) Si pase la validación, armo el payload
+  const materiaData = getMateriaFromForm();
+  const url    = editingInscripcionId
+               ? `/db/materia/${editingInscripcionId}`
+               : "/db/materia";
+  const method = editingInscripcionId ? "PUT" : "POST";
+
+  // 3) Ejecuto el fetch
+  fetch(url, {
+    method,
+    headers: authHeaders(),
+    body: JSON.stringify(materiaData)
+  })
+    .then(r => {
+      if (!r.ok) throw new Error("No autorizado");
+      return r.json();
+    })
+    .then(() => {
+      loadMaterias();
+      loadStats();
       closeFormModal();
       editingInscripcionId = null;
     })
