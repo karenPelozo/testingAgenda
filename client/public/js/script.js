@@ -124,30 +124,137 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // — 4) Generar PDF —
-  if (btnImprimir) {
-    btnImprimir.addEventListener("click", () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF("p","pt","a4");
-      doc.setFontSize(18);
-      doc.text("Reporte de Materias y Eventos", 40, 50);
+btnImprimir.addEventListener("click", async () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+  unit: "pt",
+  format: "a4",
+  orientation: "portrait" 
+});
+  const { width, height } = doc.internal.pageSize;
+  const m = 40;      
+  let y = m;
 
-      const head = [["Materia","Año","Modalidad","Eventos"]];
-      const body = [];
-      document.querySelectorAll("#materiasTable tbody tr")
-        .forEach(tr => {
-          const td = tr.querySelectorAll("td");
-          body.push([
-            td[0]?.textContent||"N/A",
-            td[1]?.textContent||"",
-            td[4]?.textContent||"",
-            td[6]?.textContent||"—"
-          ]);
-        });
+  // — Header con logo —
+  try {
+    const blob = await fetch("img/leyendo.png").then(r => r.blob());
+    const img  = await new Promise(res => {
+      const i = new Image();
+      i.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = i.width; c.height = i.height;
+        c.getContext("2d").drawImage(i,0,0);
+        res(c.toDataURL("image/png"));
+      };
+      i.src = URL.createObjectURL(blob);
+    });
+    doc.addImage(img, "PNG", m, y, 50, 50);
+  } catch(_) { /* logo fallido */ }
 
-      doc.autoTable({ startY: 80, head, body, theme: "grid", styles: { fontSize: 11 } });
-      doc.save("reporte-materias.pdf");
+  doc.setFontSize(18);
+  doc.text("Reporte de Materias y Eventos", m + 60, y + 16);
+  doc.setFontSize(10);
+  const u = JSON.parse(localStorage.getItem("user") || "{}");
+  doc.text(`Usuario: ${u.nombre || "-"}`, m, y + 70);
+  doc.text(`Fecha: ${new Date().toLocaleString()}`, width - m - 150, y + 70);
+  y += 90;
+
+  // — Estadísticas —
+  const statsRes = await fetch("/db/estadisticas", { headers: authHeaders() });
+  if (!statsRes.ok) return console.error("Stats err", statsRes.status);
+  const s = await statsRes.json();
+  doc.setFontSize(11);
+  doc.text(`Total materias: ${s.totalMaterias}`, m, y);
+  doc.text(`Aprobadas: ${s.materiasAprobadas}`, m + 160, y);
+  doc.text(`Pendientes: ${s.materiasPendientes}`, m + 300, y);
+  doc.text(`Promedio: ${s.promedioGeneral}`, m + 450, y);
+  y += 30;
+
+  // — Detalle por materia —
+  const insRes = await fetch(`/db/materias?idUsuario=${loggedUserId}`, {
+    headers: authHeaders()
+  });
+  if (!insRes.ok) return console.error("Inscripciones err", insRes.status);
+  const inscripciones = await insRes.json();
+
+  for (const ins of inscripciones) {
+    if (y > height - 200) { doc.addPage(); y = m; }
+
+    // Nombre materia
+    doc.setFontSize(14);
+    doc.text(ins.materia.NombreMateria, m, y);
+    y += 16;
+
+    // Estado materia + año de carrera
+    doc.setFontSize(11);
+    doc.text(`Estado materia: ${ins.materia.estado}`, m, y);
+    doc.text(
+      `Año de carrera: ${ins.eventos[0]?.anioDeCarrera ?? "-"}`,
+      m + 240,
+      y
+    );
+    y += 14;
+
+    // Correlativas
+    doc.text(
+      `Correlativas: ${ins.eventos[0]?.correlativas || "-"}`,
+      m,
+      y
+    );
+    y += 18;
+
+    // Tabla de eventos con Modalidad
+    const head = [[
+      "Tipo","N°","Temas","Modalidad",
+      "Estado","Día","Fecha","P1","P2","Final"
+    ]];
+    const body = ins.eventos.map(ev => [
+      ev.tipo        || "-",
+      ev.numero != null ? ev.numero : "-",
+      ev.temasAEstudiar || "-",
+      ev.modalidad?.tipoModalidad || "-",
+      ev.estado     || "-",
+      ev.dia        || "-",
+      ev.fechaExamen || ev.fechaEntrega || "-",
+      ev.notaParcial1 != null ? ev.notaParcial1 : "-",
+      ev.notaParcial2 != null ? ev.notaParcial2 : "-",
+      ev.notaFinal  || "-"
+    ]);
+
+    doc.autoTable({
+      startY: y,
+      head, body,
+      theme: "grid",
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: "#1976d2", textColor: "#fff" },
+      margin: { left: m, right: m },
+      columnStyles: {
+        0:{ cellWidth:60 }, 1:{cellWidth:25},
+        2:{cellWidth:100},3:{cellWidth:80},
+        4:{cellWidth:50}, 5:{cellWidth:40},
+        6:{cellWidth:60}, 7:{cellWidth:25},
+        8:{cellWidth:25}, 9:{cellWidth:30}
+      },
+      didDrawPage: data => { y = data.cursor.y + 12; }
     });
   }
+
+  // — Gráfico compacto al final —
+  const chartCan = document.getElementById("dashboardChart");
+  const chartImg = chartCan.toDataURL("image/png");
+  const cw = 200;
+  const ch = (chartCan.height / chartCan.width) * cw;
+  const x = (width - cw) / 2;
+  if (y + ch > height - m) { doc.addPage(); y = m; }
+  doc.addImage(chartImg, "PNG", x, y, cw, ch);
+
+  // — Guardar PDF —
+  doc.save("reporte-materias.pdf");
+});
+
+
+
+
 
 
 
@@ -964,7 +1071,7 @@ function eliminarUsuario(id) {
 
 /**
  * Muestra dentro de #notificationsList los eventos recibidos
- * @param {Array} eventos — arreglo de objetos { tipo, fechaEntrega, fechaExamen, dia … }
+
  */
 /*function mostrarEventosEnNotificaciones(eventos) {
   const panel = document.getElementById('notificationsList');
@@ -1011,8 +1118,6 @@ async function obtenerProximosEventos() {
 }
 
 
-
-
 function mostrarEventosEnNotificacionesEnPopup(eventos) {
   // Abre una “ventana” de 500×600
   const popup = window.open(
@@ -1052,52 +1157,3 @@ function mostrarEventosEnNotificacionesEnPopup(eventos) {
     </body></html>
   `);
 }
-
-
-
-
-
-/* ============================
-   Función de reporte
-============================ */
-
-
-document.getElementById("btnImprimir").addEventListener("click", () => {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  // Título
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("Reporte de Materias y Eventos", 15, 20);
-
-  // Datos de la grilla
-  const headers = ["Materia", "Año", "Modalidad", "Eventos"];
-  const rows = [];
-
-  document.querySelectorAll("#materiasTable tbody tr").forEach(tr => {
-    const cells = tr.querySelectorAll("td");
-    const eventos = cells[6]?.textContent || "Sin eventos"; 
-    rows.push([
-      cells[0]?.textContent || "N/A",  // Materia
-      cells[1]?.textContent || "",     // Año
-      cells[4]?.textContent || "",     // Modalidad
-      eventos                           // Eventos
-    ]);
-  });
-
-  // Generar tabla
-  doc.autoTable({
-    startY: 30,
-    head: [headers],
-    body: rows,
-    theme: "grid",
-    styles: { fontSize: 12 }
-  });
-
-  // Descargar el PDF
-  doc.save("reporte-materias.pdf");
-});
-
-
-
