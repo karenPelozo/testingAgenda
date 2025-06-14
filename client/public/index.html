@@ -39,6 +39,14 @@
 <button id="btnNotifications">Notificaciones</button>
 <div id="notificationsList" style="display:none;"></div>
 
+<div id="modalNotificaciones" class="modal">
+  <div class="modal-content">
+    <span id="closeNotifModal" class="modal-close">&times;</span>
+    <h2>📅 Próximos Eventos</h2>
+    <ul id="notifList"></ul>
+  </div>
+</div>
+
 
     <span id="btnInfo" onclick="showInfo()" title="Acerca de mí">
       <i class="bi bi-info-circle-fill"></i>
@@ -151,6 +159,15 @@
       <div id="details-content"></div>
     </div>
   </div>
+
+  <div id="modalNotificaciones" class="modal">
+  <div class="modal-content">
+    <span id="closeNotifModal" class="modal-close">&times;</span>
+    <h2>📅 Próximos Eventos</h2>
+    <ul id="notifList"></ul>
+  </div>
+</div>
+
 
   <script src="js/script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

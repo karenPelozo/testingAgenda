@@ -12,113 +12,144 @@ function authHeaders() {
 }
 
 // ——— 3 · DOM Ready ———
+/* ——— DOM Ready: Un solo bloque ———*/
 document.addEventListener("DOMContentLoaded", () => {
-  // —— 0) Referencias a nodos clave ——
-  const loginModal       = document.getElementById("login-modal");
-  const logoutBtn        = document.getElementById("logoutBtn");
-  const btnOpenForm      = document.getElementById("btnOpenForm");
-  const btnCancelar      = document.getElementById("btnCancelar");
-  const btnGuardar       = document.getElementById("btnGuardar");
-  const btnAgregarEvento = document.getElementById("btnAgregarEvento");
-  const btnNotif         = document.getElementById("btnNotifications");
-  const panelNotif       = document.getElementById("notificationsList");
-  const btnImprimir      = document.getElementById("btnImprimir");
+  // — Referencias DOM —
+  const loginModal        = document.getElementById("login-modal");
+  const logoutBtn         = document.getElementById("logoutBtn");
+  const btnOpenForm       = document.getElementById("btnOpenForm");
+  const btnCancelar       = document.getElementById("btnCancelar");
+  const btnGuardar        = document.getElementById("btnGuardar");
+  const btnAgregarEvento  = document.getElementById("btnAgregarEvento");
+  const btnNotif          = document.getElementById("btnNotifications");
+  const panelNotif        = document.getElementById("notificationsList");
+  const modalNotif        = document.getElementById("modalNotificaciones");
+  const closeNotifModal   = document.getElementById("closeNotifModal");
+  const notifList         = document.getElementById("notifList");
+  const btnImprimir       = document.getElementById("btnImprimir");
+  const formModal         = document.getElementById("form-modal");
+  const modalTitle        = document.getElementById("modal-title");
+  const eventosContainer  = document.getElementById("eventos-container");
 
-  // —— 1) Mostrar login u ocultarlo según sesión ——
+  // — Inicialización según sesión —
   const userJson = localStorage.getItem("user");
   if (!userJson) {
     if (loginModal) loginModal.style.display = "flex";
   } else {
-    // ya logueado
     const user = JSON.parse(userJson);
     loggedUserId = user.id;
-
     if (loginModal) loginModal.style.display = "none";
-    if (logoutBtn)  logoutBtn.style.display  = "inline-block";
+    if (logoutBtn)  logoutBtn.style.display = "inline-block";
 
     if (user.rol.toLowerCase() === "administrador") {
       cargarUsuarios();
       cargarMateriasAdmin();
     }
-
     populateMateriasSelect();
     populateModalidadesSelect();
     loadMaterias();
   }
 
-  // —— 2) Listeners del formulario ——  
+  // — 1) “Nuevo”: limpio todo y abro form —
   if (btnOpenForm) {
-    btnOpenForm.addEventListener("click", openFormModal);
-  }
-  if (btnCancelar) {
-    btnCancelar.addEventListener("click", e => {
+    btnOpenForm.addEventListener("click", e => {
       e.preventDefault();
-      closeFormModal();
+      // resetear edición
       editingInscripcionId = null;
+      if (modalTitle) modalTitle.innerText = "Nueva Inscripción";
+
+      // 1.1) Limpio selects + correlativas + container dinámico
+      clearForm(); // tu función existente limpia NombreMateria, idModalidad, correlativas y eventos
+      eventosContainer.innerHTML = "<h3>Eventos</h3>";
+
+      // 1.2) Limpio inputs estáticos extra
+      ["anioDeCarrera","anio","horaInicio","horaFin",
+       "examen","notaParcial1","notaParcial2","notaFinal"]
+        .forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+
+      // 1.3) Vuelvo a poblar selects
+      populateMateriasSelect();
+      populateModalidadesSelect();
+
+      // 1.4) Finalmente muestro el modal
+      if (formModal) formModal.style.display = "flex";
     });
   }
-  if (btnGuardar) {
-    btnGuardar.addEventListener("click", saveMateria);
-  }
-  if (btnAgregarEvento) {
-    btnAgregarEvento.addEventListener("click", agregarEvento);
-  }
 
-  // —— 3) Notificaciones ——  
-  if (btnNotif && panelNotif) {
+  // — 2) Botones del form existente —
+  if (btnCancelar) btnCancelar.addEventListener("click", e => {
+    e.preventDefault();
+    closeFormModal();
+    editingInscripcionId = null;
+  });
+  if (btnGuardar)        btnGuardar.addEventListener("click", saveMateria);
+  if (btnAgregarEvento)  btnAgregarEvento.addEventListener("click", agregarEvento);
+
+  // — 3) Notificaciones: toggle + modal —
+  if (btnNotif && modalNotif && closeNotifModal && notifList) {
     btnNotif.addEventListener("click", async () => {
-      const isOpen = panelNotif.style.display === "block";
-      panelNotif.style.display = isOpen ? "none" : "block";
-
-      if (!isOpen) {
-        try {
-          const eventos = await fetch("/notificaciones")
-            .then(r => { if (!r.ok) throw r; return r.json(); });
-          mostrarEventosEnNotificaciones(eventos);
-        } catch (err) {
-          console.error("Error al traer notificaciones:", err);
-        }
+      const visible = window.getComputedStyle(modalNotif).display !== "none";
+      if (visible) {
+        modalNotif.style.display = "none";
+        return;
+      }
+      try {
+        const eventos = await obtenerProximosEventos();
+        notifList.innerHTML = eventos.length
+          ? eventos.map(ev => {
+              const fecha = ev.fechaEntrega || ev.fechaExamen || "—";
+              return `
+                <li>
+                  <strong>${ev.tipo}</strong><br>
+                  Día: ${ev.dia || "—"} · Fecha: ${fecha}
+                </li>
+              `;
+            }).join("")
+          : "<li>No hay eventos próximos.</li>";
+        modalNotif.style.display = "flex";
+      } catch (err) {
+        console.error("Error trayendo notificaciones:", err);
       }
     });
+
+    closeNotifModal.addEventListener("click", () => {
+      modalNotif.style.display = "none";
+    });
+    modalNotif.addEventListener("click", e => {
+      if (e.target === modalNotif) modalNotif.style.display = "none";
+    });
   }
 
-  // —— 4) Imprimir PDF ——  
+  // — 4) Generar PDF —
   if (btnImprimir) {
     btnImprimir.addEventListener("click", () => {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF("p","pt","a4");
-
-      // Título
       doc.setFontSize(18);
       doc.text("Reporte de Materias y Eventos", 40, 50);
 
-      // Armado de tabla
       const head = [["Materia","Año","Modalidad","Eventos"]];
       const body = [];
-      document
-        .querySelectorAll("#materiasTable tbody tr")
+      document.querySelectorAll("#materiasTable tbody tr")
         .forEach(tr => {
           const td = tr.querySelectorAll("td");
           body.push([
-            td[0]?.textContent || "N/A",
-            td[1]?.textContent || "",
-            td[4]?.textContent || "",
-            td[6]?.textContent || "—"
+            td[0]?.textContent||"N/A",
+            td[1]?.textContent||"",
+            td[4]?.textContent||"",
+            td[6]?.textContent||"—"
           ]);
         });
 
-      doc.autoTable({
-        startY: 80,
-        head: head,
-        body: body,
-        theme: "grid",
-        styles: { fontSize: 11, cellPadding: 4 }
-      });
-
+      doc.autoTable({ startY: 80, head, body, theme: "grid", styles: { fontSize: 11 } });
       doc.save("reporte-materias.pdf");
     });
   }
 });
+
 
 
 function login() {
@@ -784,7 +815,7 @@ function eliminarUsuario(id) {
  * Muestra dentro de #notificationsList los eventos recibidos
  * @param {Array} eventos — arreglo de objetos { tipo, fechaEntrega, fechaExamen, dia … }
  */
-function mostrarEventosEnNotificaciones(eventos) {
+/*function mostrarEventosEnNotificaciones(eventos) {
   const panel = document.getElementById('notificationsList');
   if (!panel) return console.error('No existe #notificationsList');
 
@@ -815,7 +846,7 @@ function mostrarEventosEnNotificaciones(eventos) {
   });
 
   panel.appendChild(ul);
-}
+}*/
 
 
 async function obtenerProximosEventos() {
@@ -829,17 +860,47 @@ async function obtenerProximosEventos() {
 }
 
 
-document.getElementById('btnNotifications').addEventListener('click', async () => {
-  const panel = document.getElementById('notificationsList');
-  if (panel.style.display === 'none' || panel.style.display === '') {
-    panel.style.display = 'block';
-    const eventos = await obtenerProximosEventos();
-    mostrarEventosEnNotificaciones(eventos);
-  } else {
-    panel.style.display = 'none';
-  }
-});
 
+
+function mostrarEventosEnNotificacionesEnPopup(eventos) {
+  // Abre una “ventana” de 500×600
+  const popup = window.open(
+    "", 
+    "Eventos Próximos", 
+    "width=500,height=600,top=100,left=100"
+  );
+  if (!popup) return alert("Permite los pop-ups para esta web");
+
+  // Cabecera HTML
+  popup.document.write(`
+    <html><head>
+      <title>Próximos Eventos</title>
+      <style>
+        body { font-family: sans-serif; padding: 1em; }
+        li { margin-bottom: .5em; }
+      </style>
+    </head><body>
+      <h1>📅 Próximos Eventos</h1>
+      <ul>
+  `);
+
+  // Lista
+  eventos.forEach(ev => {
+    const fecha = ev.fechaEntrega || ev.fechaExamen || "—";
+    popup.document.write(`
+      <li>
+        <strong>${ev.tipo}</strong><br>
+        Día: ${ev.dia || "—"} – Fecha: ${fecha}
+      </li>
+    `);
+  });
+
+  popup.document.write(`
+      </ul>
+      <button onclick="window.close()">Cerrar</button>
+    </body></html>
+  `);
+}
 
 
 

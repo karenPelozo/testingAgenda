@@ -1,39 +1,47 @@
-// controllers/eventoController.js
+// controllers/notificaciones.controller.js
 const moment = require("moment");
-const { Evento } = require("../../../models/index");
+const { Evento, MateriaUsuario } = require("../../../models/index");
 
 async function getEventosProximos(req, res) {
   try {
-    const eventos = await Evento.findAll();
+    const userId = req.user.id; // viene de authenticateToken
 
-    console.log('Eventos totales:', eventos.length);
-    eventos.forEach(e => {
-      console.log(`Evento ID: ${e.id}, fechaEntrega: ${e.fechaEntrega}, fechaExamen: ${e.fechaExamen}`);
+    // 1) Obtengo SOLO los eventos de las inscripciones de este usuario
+    const eventos = await Evento.findAll({
+      include: [{
+        model: MateriaUsuario,
+        as: "inscripcion",     // Asegurate que en tu modelo Evento tienes esta asociación:
+        where: { idUsuario: userId }
+      }]
     });
 
-    const obtenerEventosProximos = (eventos, diasAntes = 3) => {
-      const hoy = moment().startOf('day');
-      return eventos.filter(evento => {
-        const fecha = evento.fechaEntrega || evento.fechaExamen;
-        if (!fecha) return false;
+    console.log("Eventos de este usuario:", eventos.length);
+    eventos.forEach(e => {
+      console.log(
+        `Evento ID: ${e.idEvento}, fechaEntrega: ${e.fechaEntrega}, fechaExamen: ${e.fechaExamen}`
+      );
+    });
 
-        const fechaEvento = moment(fecha).startOf('day'); // comparar solo la fecha sin horas
-        const diferenciaDias = fechaEvento.diff(hoy, 'days');
+    // 2) Filtro por próximos 3 días
+    const proximos = eventos.filter(ev => {
+      const fechaRaw = ev.fechaEntrega || ev.fechaExamen;
+      if (!fechaRaw) return false;
 
-        console.log(`Evento ID ${evento.id}: fechaEvento=${fechaEvento.format('YYYY-MM-DD')}, diferenciaDias=${diferenciaDias}`);
+      const hoy = moment().startOf("day");
+      const fechaEv = moment(fechaRaw).startOf("day");
+      const diff = fechaEv.diff(hoy, "days");
+      console.log(
+        `Evento ID ${ev.idEvento}: fechaEv=${fechaEv.format("YYYY-MM-DD")}, diff=${diff}`
+      );
+      return diff >= 0 && diff <= 3;
+    });
 
-        return diferenciaDias >= 0 && diferenciaDias <= diasAntes;
-      });
-    };
-
-    const proximos = obtenerEventosProximos(eventos, 3);
-    console.log('Eventos próximos encontrados:', proximos.length);
-
-    res.json(proximos);
+    console.log("Eventos próximos encontrados:", proximos.length);
+    return res.json(proximos);
 
   } catch (error) {
-    console.error('Error al obtener eventos:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error("Error en getEventosProximos:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 }
 
