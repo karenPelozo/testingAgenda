@@ -402,3 +402,29 @@ footer p {
 }
 #notifList { list-style: none; padding: 0; }
 #notifList li { margin-bottom: .7em; }
+
+ /* contenedor centrado */
+  #statsContainer {
+    text-align: center;
+    margin: 2em auto;
+    max-width: 600px;
+  }
+  /* tarjetas lado a lado */
+  #statsCards {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1.5em;
+  }
+  #statsCards div {
+    background: #f5f5f5;
+    padding: 1em;
+    border-radius: 8px;
+    width: 120px;
+  }
+  /* ajustamos el tamaño del canvas */
+  #dashboardChart {
+    max-width: 300px;
+    max-height: 300px;
+    margin: 0 auto;
+    display: block;
+  }

@@ -8,6 +8,7 @@ const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+//const estadisticasRoute = require("./routes/estadisticas.route");
 const SECRET = process.env.JWT_SECRET || "clavesecreta";
 // Importa el middleware de autorización desde la carpeta middleware
 const verifyAdmin = require('./client/src/server/middleware/verifyAdmin');
@@ -23,11 +24,13 @@ const port = process.env.PORT || 3000;
 const sequelize = require('./client/Data/db');
 const User = require('./client/models/User');
 const { Materia, Modalidad, MateriaUsuario, Evento } = require('./client/models/index');
+const estadisticasRoute = require("./client/src/server/routes/estadisticas.route");
 
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "client", "public")));
 app.use("/notificaciones", authenticateToken, notificacionesRoute);
+app.use("/db/estadisticas", estadisticasRoute);
 
 
 // Ruta raíz: enviar index.html

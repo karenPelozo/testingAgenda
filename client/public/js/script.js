@@ -177,6 +177,86 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+function renderChart({ materiasAprobadas, materiasPendientes }) {
+  new Chart(document.getElementById('dashboardChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Aprobadas','Pendientes'],
+      datasets: [{
+        data: [materiasAprobadas, materiasPendientes],
+        backgroundColor: ['#4caf50','#f44336']
+      }]
+    }
+  });
+}
+
+
+
+let dashboardChart;
+
+// 2) Función que pide stats y refresca DOM + gráfico
+async function loadStats() {
+  try {
+    const res   = await fetch("/db/estadisticas", { headers: authHeaders() });
+    const stats = await res.json();
+
+    // Pinto los números
+    document.getElementById("totalMaterias").textContent      = stats.totalMaterias;
+    document.getElementById("materiasAprobadas").textContent  = stats.materiasAprobadas;
+    document.getElementById("materiasPendientes").textContent = stats.materiasPendientes;
+    document.getElementById("promedioGeneral").textContent    = stats.promedioGeneral;
+
+    // Si no existe el chart, lo creo
+    if (!dashboardChart) {
+      const ctx = document.getElementById("dashboardChart").getContext("2d");
+      dashboardChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Aprobadas", "Pendientes"],
+          datasets: [{
+            data: [stats.materiasAprobadas, stats.materiasPendientes],
+            backgroundColor: ["#4caf50", "#f44336"]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom" } },
+          cutout: "70%"
+        }
+      });
+    } else {
+      // si ya existe, solo actualizo datos y refresco
+      dashboardChart.data.datasets[0].data = [
+        stats.materiasAprobadas,
+        stats.materiasPendientes
+      ];
+      dashboardChart.update();
+    }
+  } catch (err) {
+    console.error("Error cargando estadísticas:", err);
+  }
+}
+
+// 3) Al cargar la página
+document.addEventListener("DOMContentLoaded", () => {
+  loadStats();  // primer render
+
+  // 4) “En vivo” cada vez que cambias notas parciales
+  const np1 = document.getElementById("notaParcial1");
+  const np2 = document.getElementById("notaParcial2");
+  if (np1 && np2) {
+    np1.addEventListener("input", loadStats);
+    np2.addEventListener("input", loadStats);
+  }
+
+  // 5) Y tras cada guardado de materia
+  const origSave = saveMateria;
+  saveMateria = async function() {
+    await origSave();   // ejecuta tu lógica de guardar
+    loadStats();        // luego refresca el dashboard
+  };
+});
 
 
 
@@ -597,6 +677,7 @@ function saveMateria() {
     })
     .then(() => {
       loadMaterias();
+      loadStats(); 
       closeFormModal();
       editingInscripcionId = null;
     })
@@ -627,6 +708,7 @@ function deleteMateria(id) {
               showConfirmButton: false
             });
             loadMaterias();
+            loadStats();
           } else {
             Swal.fire('Error', 'Error al eliminar la materia.', 'error');
           }

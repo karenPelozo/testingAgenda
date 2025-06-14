@@ -132,27 +132,24 @@ notaFinal: {
   timestamps: false,
 
   // HOOK: antes de guardar o actualizar, calcula notaFinal
-  hooks: {
-    beforeSave: (evento) => {
-      const n1 = evento.notaParcial1;
-      const n2 = evento.notaParcial2;
+// models/Evento.js
+// …
+hooks: {
+  beforeSave: (evento) => {
+    // convierto explícitamente a número
+    const n1 = parseFloat(evento.notaParcial1) || 0;
+    const n2 = parseFloat(evento.notaParcial2) || 0;
 
-      // si faltan parciales
-      if (n1 == null || n2 == null) {
-        evento.notaFinal = null;
-        return;
-      }
-
-      // si alguno <7: "Debe recuperar"
-      if (n1 < 7 || n2 < 7) {
-        evento.notaFinal = "Debe recuperar";
-      } else {
-        // promedio y ceil
-        const prom = Math.ceil((n1 + n2) / 2);
-        evento.notaFinal = String(prom);
-      }
+    if (n1 < 7 || n2 < 7) {
+      evento.notaFinal = "Debe recuperar";
+    } else {
+      // ahora sí sumo números
+      const prom = Math.ceil((n1 + n2) / 2);
+      evento.notaFinal = String(prom);
     }
   }
+}
+
 });
 
 module.exports = Evento;
