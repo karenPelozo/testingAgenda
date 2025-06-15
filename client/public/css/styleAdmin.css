@@ -95,16 +95,24 @@ body {
 }
 
 .header-container {
-  position: relative;
+  position: relative;        /* para que el absoluto de <h1> se refiera a aquí */
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center;       /* centra verticalmente */
   padding: 15px 50px;
-  /* espacio lateral para #btnInfo */
   background: linear-gradient(90deg, #b78ef1, #ffaa00);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  box-sizing: border-box;
+}
+
+/* título centrado siempre, independientemente del ancho de .actions */
+.header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: "Pacifico", cursive;
+  font-size: 28px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 #btnInfo {
@@ -118,10 +126,6 @@ body {
   overflow: hidden;
 }
 
-.header-container .logo {
-  max-width: 50px;
-  margin-right: 10px;
-}
 
 .header-container h1 {
   font-family: "Pacifico", cursive;
@@ -499,11 +503,95 @@ table td {
 
 .admin-section {
   margin: 2rem 0;
+}.admin-section {
+  background: #fff; /* Fondo claro */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  max-width: 1000px; /* Limita el ancho */
+  margin-left: auto;
+  margin-right: auto; /* Centra la sección */
 }
 
+/* Título de la sección */
 .admin-section h2 {
-  margin-bottom: 1rem;
+  text-align: center;
+  color: #b78ef1;
+  font-size: 22px;
+  text-transform: uppercase;
+  font-family: "Pacifico", cursive;
+  margin-bottom: 1.5rem;
 }
+
+/* Tabla dentro de las secciones */
+.admin-section table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+/* Encabezado de la tabla */
+.admin-section thead {
+  background: linear-gradient(90deg, #b78ef1, #ffaa00);
+}
+
+.admin-section th {
+  color: #fff;
+  padding: 12px;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+/* Filas alternadas */
+.admin-section tbody tr:nth-child(even) {
+  background: #f9f6ff;
+}
+.admin-section tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+.admin-section tbody tr:hover {
+  background: #e6d7fb;
+  transition: background 0.3s ease;
+}
+
+/* Ajustes de botones */
+.admin-section button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.admin-section .btn-primary {
+  background-color: #b78ef1;
+  color: #fff;
+}
+.admin-section .btn-primary:hover {
+  background-color: #dac7f8;
+}
+
+.admin-section .btn-secondary {
+  background-color: #6c757d;
+  color: #fff;
+}
+.admin-section .btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+/* Contenedor de botones en formularios */
+.admin-section .button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: center;
+}
+
 
 #tablaMaterias th,
 #tablaMaterias td {
@@ -523,21 +611,198 @@ table td {
 }
 
 #btnCerrarSesion {
-  background-color: #e74c3c; /* Rojo vibrante */
-  color: #fff; /* Texto blanco */
+  background-color: #b78ef1;
+  color: #fff;
   padding: 10px 20px;
   font-size: 1rem;
   border: none;
-  border-radius: 5px; /* Bordes redondeados */
+  border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #btnCerrarSesion:hover {
-  background-color: #c0392b; /* Tono más oscuro al pasar el mouse */
+  background-color: #dac7f8;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 #btnCerrarSesion:active {
-  transform: scale(0.98); /* Efecto de "presionar" */
+  transform: scale(0.98);
+}
+
+#formUsuario {
+  background: #fff;         /* Fondo limpio */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  max-width: 600px;        /* Limita el ancho en pantallas grandes */
+  margin-left: auto;
+  margin-right: auto;       /* Centra el formulario */
+}
+
+#formUsuario h2 {
+  text-align: center;
+  color: #b78ef1;
+  font-size: 22px;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  font-family: "Pacifico", cursive;
+}
+
+#formUsuario label {
+  display: block;
+  font-weight: bold;
+  margin: 12px 0 6px;
+  color: #333;
+}
+
+#formUsuario input,
+#formUsuario select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f4f4f4;
+  transition: border-color 0.3s ease;
+  font-size: 14px;
+}
+
+#formUsuario input:focus,
+#formUsuario select:focus {
+  border-color: #b78ef1;
+  outline: none;
+}
+
+/* Botones con mismo estilo que el index */
+#formUsuario .btn {
+  display: inline-block;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  min-width: 120px;
+}
+
+#formUsuario .btn-primary {
+  background-color: #b78ef1;
+  color: #fff;
+}
+
+#formUsuario .btn-primary:hover {
+  background-color: #dac7f8;
+}
+
+#formUsuario .btn-secondary {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+#formUsuario .btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+/* Contenedor de botones para alinearlos */
+#formUsuario .button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: center; /* Centra los botones */
+}
+
+#tablaUsuarios h2 {
+  text-align: center;
+  color: #b78ef1;
+  font-size: 22px;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  font-family: "Pacifico", cursive;
+}
+
+
+
+#tablaUsuarios {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  background: #fff;
+  border-collapse: collapse;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+/* Encabezado de la tabla */
+#tablaUsuarios thead {
+  background: linear-gradient(90deg, #b78ef1, #ffaa00);
+}
+
+#tablaUsuarios th {
+  color: #fff;
+  padding: 12px;
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+/* Filas y celdas */
+#tablaUsuarios td {
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  word-break: break-word;
+  border: 1px solid #ddd;
+}
+
+/* Alternancia de colores en filas */
+#tablaUsuarios tbody tr:nth-child(even) {
+  background: #f9f6ff;
+}
+#tablaUsuarios tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+/* Hover en filas */
+#tablaUsuarios tbody tr:hover {
+  background: #e6d7fb;
+  transition: background 0.3s ease;
+}
+
+/* Botones dentro de las filas */
+#tablaUsuarios button {
+  padding: 6px 10px;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+/* Botones de acciones */
+#tablaUsuarios .btn-editar {
+  background: #ffc107;
+  color: #fff;
+}
+#tablaUsuarios .btn-editar:hover {
+  background: #d39e00;
+}
+
+#tablaUsuarios .btn-eliminar {
+  background: #dc3545;
+  color: #fff;
+}
+#tablaUsuarios .btn-eliminar:hover {
+  background: #c82333;
+}
+
+#tablaUsuarios .btn-detalles {
+  background: #17a2b8;
+  color: #fff;
+}
+#tablaUsuarios .btn-detalles:hover {
+  background: #138496;
 }

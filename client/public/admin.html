@@ -13,17 +13,16 @@
 
     <!-- Sección Usuarios -->
 <div class="header-container">
+
 <h1>Panel de Administración</h1>
+  <div class="actions">
+    <button id="btnCerrarSesion" onclick="logout()">Cerrar sesión<i class="bi bi-box-arrow-right"></i></button>
+  </div>
 </div>
-
-
-
     <section class="admin-section" id="usuarios-admin">
       
       <form id="formUsuario" onsubmit="guardarUsuario(); return false;">
         <h2>Nuevo Usuario</h2>
-  <button id="btnCerrarSesion" onclick="logout()">Cerrar sesión</button>
-          <br><br>
         <label>Nombre:</label>
         <input type="text" id="nombreUsuario" required>
         <label>Contraseña:</label>
@@ -42,8 +41,9 @@
         </button>
       </form>
 
-      <h2>Usuarios Registrados</h2>
+      
       <table id="tablaUsuarios">
+        <h2>Usuarios Registrados</h2>
         <thead>
           <tr><th>ID</th><th>Nombre</th><th>Rol</th><th>Acciones</th></tr>
         </thead>
