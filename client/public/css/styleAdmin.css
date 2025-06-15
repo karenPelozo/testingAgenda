@@ -78,6 +78,7 @@ body {
 }
 
 
+
 html,
 body {
   margin: 0;
@@ -95,12 +96,77 @@ body {
 }
 
 .header-container {
-  position: relative;        /* para que el absoluto de <h1> se refiera a aquí */
   display: flex;
-  align-items: center;       /* centra verticalmente */
+  justify-content: space-between; /* Separa los elementos */
+  align-items: center;
   padding: 15px 50px;
   background: linear-gradient(90deg, #b78ef1, #ffaa00);
 }
+
+/* Alinear el título a la derecha */
+.header-container h1 {
+  margin: 0;
+  font-family: "Pacifico", cursive;
+  font-size: 28px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: right; /* Asegura que el texto esté alineado */
+  flex-grow: 1; /* Empuja el título hacia la derecha */
+}.header-container {
+  position: relative;        /* contenedor de referencia */
+  display: flex;
+  align-items: center;       /* centra vertical */
+  padding: 15px 50px;
+  background: linear-gradient(90deg, #b78ef1, #ffaa00);
+}
+
+/* CENTRAR el título sin que lo empujen los botones */
+.header-container h1 {
+  position: absolute;        /* lo saca del flujo */
+  left: 50%;                 
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: "Pacifico", cursive;
+  font-size: 28px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* Mantén tus acciones alineadas a la derecha */
+.header-container .actions {
+  margin-left: auto;         /* empuja el bloque de botones al final */
+  display: flex;
+  gap: 10px;
+}
+
+
+/* Alinear el botón a la derecha */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.actions button {
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color .3s, transform .2s;
+}
+
+.actions button:hover {
+  background-color: #c82333;
+}
+
+.actions button:active {
+  transform: scale(0.97);
+}
+
 
 /* título centrado siempre, independientemente del ancho de .actions */
 .header-title {
@@ -515,14 +581,14 @@ table td {
 }
 
 /* Título de la sección */
-.admin-section h2 {
-  text-align: center;
-  color: #b78ef1;
-  font-size: 22px;
-  text-transform: uppercase;
-  font-family: "Pacifico", cursive;
-  margin-bottom: 1.5rem;
-}
+  .admin-section h2 {
+    text-align: center;
+    color: #b78ef1;
+    font-size: 22px;
+    text-transform: uppercase;
+    font-family: 'Roboto', Arial, sans-serif;
+    margin-bottom: 1.5rem;
+  }
 
 /* Tabla dentro de las secciones */
 .admin-section table {
@@ -647,7 +713,7 @@ table td {
   font-size: 22px;
   text-transform: uppercase;
   margin-bottom: 1rem;
-  font-family: "Pacifico", cursive;
+  font-family: 'Roboto', Arial, sans-serif;
 }
 
 #formUsuario label {
@@ -719,7 +785,7 @@ table td {
   font-size: 22px;
   text-transform: uppercase;
   margin-bottom: 1rem;
-  font-family: "Pacifico", cursive;
+  font-family: 'Roboto', Arial, sans-serif;
 }
 
 
