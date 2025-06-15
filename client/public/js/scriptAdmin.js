@@ -239,6 +239,43 @@ function cargarMateriasAdmin() {
     .catch(err => alert("Error al cargar materias: " + err.message));
 }
 
+// ——— 4.2 · Crear materia (POST /db/materia/global) ———
+function guardarMateria() {
+  const nombre = document.getElementById("nombreMateria").value.trim();
+  if (!nombre) {
+    return alert("Ingrese nombre de materia");
+  }
+
+  fetch("/db/materia/global", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ NombreMateria: nombre })
+  })
+    .then(res => {
+      if (!res.ok) {
+        return res.json().then(e => {
+          throw new Error(e.error || "Error al crear materia");
+        });
+      }
+      return res.json();
+    })
+    .then(() => {
+      // Limpio el formulario y recargo la tabla
+      document.getElementById("formMateria").reset();
+      cargarMateriasAdmin();
+      Swal.fire({
+        icon: "success",
+        title: "Materia creada",
+        timer: 1500,
+        showConfirmButton: false
+      });
+    })
+    .catch(err => {
+      console.error("guardarMateria:", err);
+      alert("No se pudo crear la materia:\n" + err.message);
+    });
+}
+
 
 // 4.3 Cambiar estado
 function toggleEstadoMateria(id, actual) {
