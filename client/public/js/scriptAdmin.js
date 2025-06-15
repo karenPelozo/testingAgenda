@@ -35,23 +35,32 @@ function cargarUsuarios() {
       return res.json();
     })
     .then(data => {
-      tbody.innerHTML = "";
-      data.forEach(u => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
+      // 1) Genero filas sin onclick inline
+      tbody.innerHTML = data.map(u => `
+        <tr data-id="${u.id}">
           <td>${u.id}</td>
           <td>${u.nombre}</td>
           <td>${u.rol}</td>
           <td>
-            <button class="btn btn-warning" onclick="editarUsuario(${u.id})">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-danger" onclick="eliminarUsuario(${u.id})">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>`;
-        tbody.appendChild(tr);
-      });
+            <button class="btn btn-warning btn-edit"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-danger btn-del"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+      `).join("");
+
+      // 2) Asigno listeners a los botones recién creados
+      tbody.querySelectorAll(".btn-edit").forEach(btn =>
+        btn.addEventListener("click", e => {
+          const id = e.currentTarget.closest("tr").dataset.id;
+          editarUsuario(id);
+        })
+      );
+      tbody.querySelectorAll(".btn-del").forEach(btn =>
+        btn.addEventListener("click", e => {
+          const id = e.currentTarget.closest("tr").dataset.id;
+          eliminarUsuario(id);
+        })
+      );
     })
     .catch(err => alert("Error al cargar usuarios: " + err.message));
 }
@@ -128,7 +137,12 @@ function guardarEdicionUsuario() {
   })
     .then(res => res.json())
     .then(() => {
-      alert("Usuario actualizado");
+      Swal.fire({
+        icon: "success",
+        title: "¡Usuario actualizado!",
+        showConfirmButton: false,
+        timer: 1500
+      });
       cerrarModalEditarUsuario();
       cargarUsuarios();
     })
@@ -180,11 +194,35 @@ function eliminarUsuario(id) {
   });
 }
 
+
+
 // Modal usuarios
 function abrirModalEditarUsuario() {
-  document.getElementById("modalEditarUsuario").classList.add("active");
-  document.getElementById("modalBackdrop")      .classList.add("active");
+  const m = document.getElementById("modalEditarUsuario");
+  const b = document.getElementById("modalBackdrop");
+  // 1) Asegurá el show por inline-style
+  m.style.display = "block";
+  b.style.display = "block";
+  // 2) Luego activá la transición
+  setTimeout(() => {
+    m.classList.add("active");
+    b.classList.add("active");
+  }, 10);
 }
+
+function cerrarModalEditarUsuario() {
+  const m = document.getElementById("modalEditarUsuario");
+  const b = document.getElementById("modalBackdrop");
+  // 1) Quitá la clase de active
+  m.classList.remove("active");
+  b.classList.remove("active");
+  // 2) Tras la animación, ocultalo de nuevo
+  setTimeout(() => {
+    m.style.display = "none";
+    b.style.display = "none";
+  }, 300);
+}
+
 function cerrarModalEditarUsuario() {
   const m = document.getElementById("modalEditarUsuario"),
         b = document.getElementById("modalBackdrop");

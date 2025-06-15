@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 function login() {
-  const nombre = document.getElementById("username").value;
+  const nombre   = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
   fetch("/login", {
@@ -386,47 +386,54 @@ function login() {
     .then(res => res.json())
     .then(data => {
       if (data.error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Login fallido',
+        return Swal.fire({
+          icon: "error",
+          title: "Login fallido",
           text: data.error
         });
-        return;
       }
 
-      // 1) Guardar token + user
+      // Guardar credenciales
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
       loggedUserId = data.user.id;
 
-      // 2) Si es admin: redirigir inmediatamente a admin.html
+      // Si es ADMIN
       if (data.user.rol.toLowerCase() === "administrador") {
-        window.location.href = "admin.html";
-        return;
+        Toastify({
+          text: `¡Bienvenid@, ${data.user.nombre}!`,
+          duration: 2000,
+          gravity:  "top",
+          position: "right",
+          backgroundColor: "#1976d2",
+          close: true
+        }).showToast();
+
+        // Pequeño delay para que se vea el toast  
+        setTimeout(() => {
+          window.location.href = "admin.html";
+        }, 500);
+
+        return;  // ¡importantísimo!
       }
 
-      // 3) Si es alumno: ocultar modal y cargar su panel
-
+      // Si es ALUMNO
       Toastify({
-        text: `Bienvenid@, ${nombre}`,
-        duration: 4000,
-        gravity: "top",
+        text: `¡Bienvenid@, ${data.user.nombre}!`,
+        duration: 3000,
+        gravity:  "top",
         position: "right",
-        backgroundColor: "#b78ef1",
-        close: true,
+        backgroundColor: "#4caf50",
+        close: true
       }).showToast();
-      // 3) si es alumno: recargo la misma página
-      location.reload();
-        updateNotifBadge();
 
-
-      const loginModal = document.getElementById("login-modal");
-      if (loginModal) loginModal.style.display = "none";
-
+      // Oculto el modal y cargo el dashboard sin recarga
+      document.getElementById("login-modal").style.display = "none";
       populateMateriasSelect();
       populateModalidadesSelect();
       loadMaterias();
+      loadStats();
+      updateNotifBadge();
     })
     .catch(err => console.error("Error en login:", err));
 }
@@ -1058,8 +1065,49 @@ function cargarUsuarios() {
 }
 
 function editarUsuario(id) {
-  alert("Editar usuario con ID: " + id);
-  // Podés implementar la lógica para editar usuario, por ejemplo, abriendo un modal de edición.
+  fetch(`/db/usuarios/${id}`, { headers: authHeaders() })
+    .then(res => {
+      if (!res.ok) throw new Error("No autorizado");
+      return res.json();
+    })
+    .then(u => {
+      document.getElementById("editNombreUsuario") .value = u.nombre;
+      document.getElementById("editRolUsuario")    .value = u.rol;
+      document.getElementById("editPasswordUsuario").value = "";
+      document.getElementById("modalEditarUsuario")
+              .setAttribute("data-user-id", id);
+      abrirModalEditarUsuario();
+    })
+    .catch(err => alert("Error al cargar usuario: " + err.message));
+}
+
+// 3.4 Guardar edición (PUT /db/usuarios/:id)
+function guardarEdicionUsuario() {
+  const modal = document.getElementById("modalEditarUsuario");
+  const id    = modal.getAttribute("data-user-id");
+  const nombre = document.getElementById("editNombreUsuario").value.trim();
+  const rol    = document.getElementById("editRolUsuario").value;
+  const pass   = document.getElementById("editPasswordUsuario").value;
+
+  if (!nombre || !rol) {
+    return alert("Nombre y rol son obligatorios.");
+  }
+
+  const body = { nombre, rol };
+  if (pass) body.password = pass;
+
+  fetch(`/db/usuarios/${id}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(body)
+  })
+    .then(res => res.json())
+    .then(() => {
+      alert("Usuario actualizado");
+      cerrarModalEditarUsuario();
+      cargarUsuarios();
+    })
+    .catch(err => alert("Error al actualizar usuario: " + err.message));
 }
 
 function eliminarUsuario(id) {
@@ -1181,3 +1229,9 @@ async function updateNotifBadge() {
     console.error("No se pudo actualizar badge:", err);
   }
 }
+
+// fuerza que estas funciones vivan en window y sean encontradas por los onclick inline
+window.editarUsuario       = editarUsuario;
+window.eliminarUsuario     = eliminarUsuario;
+window.toggleEstadoMateria = toggleEstadoMateria;
+window.editarCorrelativas  = editarCorrelativas;
