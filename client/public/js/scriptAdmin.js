@@ -342,8 +342,6 @@ async function guardarCorrelativas() {
   }
 }
 
-
-
 // ——— 5 · Logout ———
 function logout() {
   localStorage.removeItem("token");

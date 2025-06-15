@@ -511,3 +511,22 @@ footer p {
   .chart-container {
   margin-right: 20px; /* Espacio entre el canvas y la info */
 }
+/* prepará al botón como contenedor */
+.position-relative { position: relative; }
+
+/* estilo del globito */
+#notifBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;             /* para centrar el número */
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+}

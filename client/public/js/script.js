@@ -48,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     populateMateriasSelect();
     populateModalidadesSelect();
     loadMaterias();
+      updateNotifBadge();
   }
 
   // — 1) “Nuevo”: limpio todo y abro form —
@@ -86,7 +87,11 @@ document.addEventListener("DOMContentLoaded", () => {
     editingInscripcionId = null;
   });
   if (btnGuardar) btnGuardar.addEventListener("click", saveMateria);
+      updateNotifBadge();
+
   if (btnAgregarEvento) btnAgregarEvento.addEventListener("click", agregarEvento);
+      updateNotifBadge();
+
 
   // — 3) Notificaciones: toggle + modal —
   if (btnNotif && modalNotif && closeNotifModal && notifList) {
@@ -121,7 +126,9 @@ document.addEventListener("DOMContentLoaded", () => {
     modalNotif.addEventListener("click", e => {
       if (e.target === modalNotif) modalNotif.style.display = "none";
     });
+        btnNotif.addEventListener("click", updateNotifBadge);
   }
+    updateNotifBadge();
 
   // — 4) Generar PDF —
   btnImprimir.addEventListener("click", async () => {
@@ -411,6 +418,7 @@ function login() {
       }).showToast();
       // 3) si es alumno: recargo la misma página
       location.reload();
+        updateNotifBadge();
 
 
       const loginModal = document.getElementById("login-modal");
@@ -857,6 +865,7 @@ function deleteMateria(id) {
             });
             loadMaterias();
             loadStats();
+              updateNotifBadge();
           } else {
             Swal.fire('Error', 'Error al eliminar la materia.', 'error');
           }
@@ -864,6 +873,7 @@ function deleteMateria(id) {
         .catch(err => console.error(err));
     }
   });
+    updateNotifBadge();
 }
 
 function agregarEvento() {
@@ -907,10 +917,12 @@ function agregarEvento() {
     <button type="button" onclick="eliminarEvento(this)">Eliminar Evento</button>
   `;
   eventosContainer.appendChild(eventoDiv);
+    updateNotifBadge();
 }
 
 function eliminarEvento(button) {
   button.parentElement.remove();
+    updateNotifBadge();
 }
 
 function showDetails(id) {
@@ -943,6 +955,7 @@ function showDetails(id) {
         detailsContent.innerHTML += `<p><strong>Eventos:</strong> N/A</p>`;
       }
       document.getElementById("details-modal").style.display = "flex";
+        updateNotifBadge();
     })
     .catch(err => console.error("Error al recuperar la inscripción:", err));
 }
@@ -1156,4 +1169,15 @@ function mostrarEventosEnNotificacionesEnPopup(eventos) {
       <button onclick="window.close()">Cerrar</button>
     </body></html>
   `);
+}
+async function updateNotifBadge() {
+  try {
+    const eventos = await obtenerProximosEventos(); // ya tienes este helper
+    const count   = Array.isArray(eventos) ? eventos.length : 0;
+    const badge   = document.getElementById("notifBadge");
+    badge.textContent     = count;
+    badge.style.display   = count > 0 ? "flex" : "none";
+  } catch (err) {
+    console.error("No se pudo actualizar badge:", err);
+  }
 }
