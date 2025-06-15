@@ -291,7 +291,7 @@ function renderChart({ materiasAprobadas, materiasPendientes }) {
       labels: ['Aprobadas', 'Pendientes'],
       datasets: [{
         data: [materiasAprobadas, materiasPendientes],
-        backgroundColor: ['#4caf50', '#f44336']
+        backgroundColor: ['#BCC400', '#e76b51']
       }]
     }
   });
@@ -322,7 +322,7 @@ async function loadStats() {
           labels: ["Aprobadas", "Pendientes"],
           datasets: [{
             data: [stats.materiasAprobadas, stats.materiasPendientes],
-            backgroundColor: ["#4caf50", "#f44336"]
+            backgroundColor: ["#BCC400", "#e76b51"]
           }]
         },
         options: {

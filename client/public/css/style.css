@@ -493,21 +493,21 @@ footer p {
     max-width: 600px;
   }
   /* tarjetas lado a lado */
-  #statsCards {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 1em;
-  }
+#statsCards {
+  display: flex;
+  flex-direction: row; /* Los elementos se alinean en línea horizontal */
+  align-items: flex-start; /* Opcional: alinea los elementos al inicio verticalmente */
+}
+
   #statsCards div {
-    background: #ffffff;
     padding: 1em;
     border-radius: 8px;
-    width: 120px;
+    width: 300px;
   }
   /* tamaño del dashboard */
-  #dashboardChart {
-    max-width: 300px;
-    max-height: 300px;
-    margin: 0 auto;
-    display: block;
-  }
+
+
+
+  .chart-container {
+  margin-right: 20px; /* Espacio entre el canvas y la info */
+}
