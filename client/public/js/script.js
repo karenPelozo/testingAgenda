@@ -1,5 +1,5 @@
 // ——— 1 · Variables globales ———
-let loggedUserId       = null;
+let loggedUserId = null;
 let editingInscripcionId = null;
 
 // ——— 2 · Helpers ———
@@ -15,21 +15,21 @@ function authHeaders() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const loginModal        = document.getElementById("login-modal");
-  const logoutBtn         = document.getElementById("logoutBtn");
-  const btnOpenForm       = document.getElementById("btnOpenForm");
-  const btnCancelar       = document.getElementById("btnCancelar");
-  const btnGuardar        = document.getElementById("btnGuardar");
-  const btnAgregarEvento  = document.getElementById("btnAgregarEvento");
-  const btnNotif          = document.getElementById("btnNotifications");
-  const panelNotif        = document.getElementById("notificationsList");
-  const modalNotif        = document.getElementById("modalNotificaciones");
-  const closeNotifModal   = document.getElementById("closeNotifModal");
-  const notifList         = document.getElementById("notifList");
-  const btnImprimir       = document.getElementById("btnImprimir");
-  const formModal         = document.getElementById("form-modal");
-  const modalTitle        = document.getElementById("modal-title");
-  const eventosContainer  = document.getElementById("eventos-container");
+  const loginModal = document.getElementById("login-modal");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const btnOpenForm = document.getElementById("btnOpenForm");
+  const btnCancelar = document.getElementById("btnCancelar");
+  const btnGuardar = document.getElementById("btnGuardar");
+  const btnAgregarEvento = document.getElementById("btnAgregarEvento");
+  const btnNotif = document.getElementById("btnNotifications");
+  const panelNotif = document.getElementById("notificationsList");
+  const modalNotif = document.getElementById("modalNotificaciones");
+  const closeNotifModal = document.getElementById("closeNotifModal");
+  const notifList = document.getElementById("notifList");
+  const btnImprimir = document.getElementById("btnImprimir");
+  const formModal = document.getElementById("form-modal");
+  const modalTitle = document.getElementById("modal-title");
+  const eventosContainer = document.getElementById("eventos-container");
 
   // — Inicialización según sesión —
   const userJson = localStorage.getItem("user");
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const user = JSON.parse(userJson);
     loggedUserId = user.id;
     if (loginModal) loginModal.style.display = "none";
-    if (logoutBtn)  logoutBtn.style.display = "inline-block";
+    if (logoutBtn) logoutBtn.style.display = "inline-block";
 
     if (user.rol.toLowerCase() === "administrador") {
       cargarUsuarios();
@@ -63,8 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
       eventosContainer.innerHTML = "<h3>Eventos</h3>";
 
       // 1.2) Limpio inputs estáticos extra
-      ["anioDeCarrera","anio","horaInicio","horaFin",
-       "examen","notaParcial1","notaParcial2","notaFinal"]
+      ["anioDeCarrera", "anio", "horaInicio", "horaFin",
+        "examen", "notaParcial1", "notaParcial2", "notaFinal"]
         .forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = "";
@@ -85,8 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
     closeFormModal();
     editingInscripcionId = null;
   });
-  if (btnGuardar)        btnGuardar.addEventListener("click", saveMateria);
-  if (btnAgregarEvento)  btnAgregarEvento.addEventListener("click", agregarEvento);
+  if (btnGuardar) btnGuardar.addEventListener("click", saveMateria);
+  if (btnAgregarEvento) btnAgregarEvento.addEventListener("click", agregarEvento);
 
   // — 3) Notificaciones: toggle + modal —
   if (btnNotif && modalNotif && closeNotifModal && notifList) {
@@ -100,14 +100,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const eventos = await obtenerProximosEventos();
         notifList.innerHTML = eventos.length
           ? eventos.map(ev => {
-              const fecha = ev.fechaEntrega || ev.fechaExamen || "—";
-              return `
+            const fecha = ev.fechaEntrega || ev.fechaExamen || "—";
+            return `
                 <li>
                   <strong>${ev.tipo}</strong><br>
                   Día: ${ev.dia || "—"} · Fecha: ${fecha}
                 </li>
               `;
-            }).join("")
+          }).join("")
           : "<li>No hay eventos próximos.</li>";
         modalNotif.style.display = "flex";
       } catch (err) {
@@ -124,133 +124,133 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // — 4) Generar PDF —
-btnImprimir.addEventListener("click", async () => {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-  unit: "pt",
-  format: "a4",
-  orientation: "portrait" 
-});
-  const { width, height } = doc.internal.pageSize;
-  const m = 40;      
-  let y = m;
-
-  // — Header con logo —
-  try {
-    const blob = await fetch("img/leyendo.png").then(r => r.blob());
-    const img  = await new Promise(res => {
-      const i = new Image();
-      i.onload = () => {
-        const c = document.createElement("canvas");
-        c.width = i.width; c.height = i.height;
-        c.getContext("2d").drawImage(i,0,0);
-        res(c.toDataURL("image/png"));
-      };
-      i.src = URL.createObjectURL(blob);
+  btnImprimir.addEventListener("click", async () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      unit: "pt",
+      format: "a4",
+      orientation: "portrait"
     });
-    doc.addImage(img, "PNG", m, y, 50, 50);
-  } catch(_) { /* logo fallido */ }
+    const { width, height } = doc.internal.pageSize;
+    const m = 40;
+    let y = m;
 
-  doc.setFontSize(18);
-  doc.text("Reporte de Materias y Eventos", m + 60, y + 16);
-  doc.setFontSize(10);
-  const u = JSON.parse(localStorage.getItem("user") || "{}");
-  doc.text(`Usuario: ${u.nombre || "-"}`, m, y + 70);
-  doc.text(`Fecha: ${new Date().toLocaleString()}`, width - m - 150, y + 70);
-  y += 90;
+    // — Header con logo —
+    try {
+      const blob = await fetch("img/leyendo.png").then(r => r.blob());
+      const img = await new Promise(res => {
+        const i = new Image();
+        i.onload = () => {
+          const c = document.createElement("canvas");
+          c.width = i.width; c.height = i.height;
+          c.getContext("2d").drawImage(i, 0, 0);
+          res(c.toDataURL("image/png"));
+        };
+        i.src = URL.createObjectURL(blob);
+      });
+      doc.addImage(img, "PNG", m, y, 50, 50);
+    } catch (_) { /* logo fallido */ }
 
-  // — Estadísticas —
-  const statsRes = await fetch("/db/estadisticas", { headers: authHeaders() });
-  if (!statsRes.ok) return console.error("Stats err", statsRes.status);
-  const s = await statsRes.json();
-  doc.setFontSize(11);
-  doc.text(`Total materias: ${s.totalMaterias}`, m, y);
-  doc.text(`Aprobadas: ${s.materiasAprobadas}`, m + 160, y);
-  doc.text(`Pendientes: ${s.materiasPendientes}`, m + 300, y);
-  doc.text(`Promedio: ${s.promedioGeneral}`, m + 450, y);
-  y += 30;
+    doc.setFontSize(18);
+    doc.text("Reporte de Materias y Eventos", m + 60, y + 16);
+    doc.setFontSize(10);
+    const u = JSON.parse(localStorage.getItem("user") || "{}");
+    doc.text(`Usuario: ${u.nombre || "-"}`, m, y + 70);
+    doc.text(`Fecha: ${new Date().toLocaleString()}`, width - m - 150, y + 70);
+    y += 90;
 
-  // — Detalle por materia —
-  const insRes = await fetch(`/db/materias?idUsuario=${loggedUserId}`, {
-    headers: authHeaders()
-  });
-  if (!insRes.ok) return console.error("Inscripciones err", insRes.status);
-  const inscripciones = await insRes.json();
-
-  for (const ins of inscripciones) {
-    if (y > height - 200) { doc.addPage(); y = m; }
-
-    // Nombre materia
-    doc.setFontSize(14);
-    doc.text(ins.materia.NombreMateria, m, y);
-    y += 16;
-
-    // Estado materia + año de carrera
+    // — Estadísticas —
+    const statsRes = await fetch("/db/estadisticas", { headers: authHeaders() });
+    if (!statsRes.ok) return console.error("Stats err", statsRes.status);
+    const s = await statsRes.json();
     doc.setFontSize(11);
-    doc.text(`Estado materia: ${ins.materia.estado}`, m, y);
-    doc.text(
-      `Año de carrera: ${ins.eventos[0]?.anioDeCarrera ?? "-"}`,
-      m + 240,
-      y
-    );
-    y += 14;
+    doc.text(`Total materias: ${s.totalMaterias}`, m, y);
+    doc.text(`Aprobadas: ${s.materiasAprobadas}`, m + 160, y);
+    doc.text(`Pendientes: ${s.materiasPendientes}`, m + 300, y);
+    doc.text(`Promedio: ${s.promedioGeneral}`, m + 450, y);
+    y += 30;
 
-    // Correlativas
-    doc.text(
-      `Correlativas: ${ins.eventos[0]?.correlativas || "-"}`,
-      m,
-      y
-    );
-    y += 18;
-
-    // Tabla de eventos con Modalidad
-    const head = [[
-      "Tipo","N°","Temas","Modalidad",
-      "Estado","Día","Fecha","P1","P2","Final"
-    ]];
-    const body = ins.eventos.map(ev => [
-      ev.tipo        || "-",
-      ev.numero != null ? ev.numero : "-",
-      ev.temasAEstudiar || "-",
-      ev.modalidad?.tipoModalidad || "-",
-      ev.estado     || "-",
-      ev.dia        || "-",
-      ev.fechaExamen || ev.fechaEntrega || "-",
-      ev.notaParcial1 != null ? ev.notaParcial1 : "-",
-      ev.notaParcial2 != null ? ev.notaParcial2 : "-",
-      ev.notaFinal  || "-"
-    ]);
-
-    doc.autoTable({
-      startY: y,
-      head, body,
-      theme: "grid",
-      styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillColor: "#1976d2", textColor: "#fff" },
-      margin: { left: m, right: m },
-      columnStyles: {
-        0:{ cellWidth:60 }, 1:{cellWidth:25},
-        2:{cellWidth:100},3:{cellWidth:80},
-        4:{cellWidth:50}, 5:{cellWidth:40},
-        6:{cellWidth:60}, 7:{cellWidth:25},
-        8:{cellWidth:25}, 9:{cellWidth:30}
-      },
-      didDrawPage: data => { y = data.cursor.y + 12; }
+    // — Detalle por materia —
+    const insRes = await fetch(`/db/materias?idUsuario=${loggedUserId}`, {
+      headers: authHeaders()
     });
-  }
+    if (!insRes.ok) return console.error("Inscripciones err", insRes.status);
+    const inscripciones = await insRes.json();
 
-  // — Gráfico compacto al final —
-  const chartCan = document.getElementById("dashboardChart");
-  const chartImg = chartCan.toDataURL("image/png");
-  const cw = 200;
-  const ch = (chartCan.height / chartCan.width) * cw;
-  const x = (width - cw) / 2;
-  if (y + ch > height - m) { doc.addPage(); y = m; }
-  doc.addImage(chartImg, "PNG", x, y, cw, ch);
+    for (const ins of inscripciones) {
+      if (y > height - 200) { doc.addPage(); y = m; }
 
-  // — Guardar PDF —
-  doc.save("reporte-materias.pdf");
-});
+      // Nombre materia
+      doc.setFontSize(14);
+      doc.text(ins.materia.NombreMateria, m, y);
+      y += 16;
+
+      // Estado materia + año de carrera
+      doc.setFontSize(11);
+      doc.text(`Estado materia: ${ins.materia.estado}`, m, y);
+      doc.text(
+        `Año de carrera: ${ins.eventos[0]?.anioDeCarrera ?? "-"}`,
+        m + 240,
+        y
+      );
+      y += 14;
+
+      // Correlativas
+      doc.text(
+        `Correlativas: ${ins.eventos[0]?.correlativas || "-"}`,
+        m,
+        y
+      );
+      y += 18;
+
+      // Tabla de eventos con Modalidad
+      const head = [[
+        "Tipo", "N°", "Temas", "Modalidad",
+        "Estado", "Día", "Fecha", "P1", "P2", "Final"
+      ]];
+      const body = ins.eventos.map(ev => [
+        ev.tipo || "-",
+        ev.numero != null ? ev.numero : "-",
+        ev.temasAEstudiar || "-",
+        ev.modalidad?.tipoModalidad || "-",
+        ev.estado || "-",
+        ev.dia || "-",
+        ev.fechaExamen || ev.fechaEntrega || "-",
+        ev.notaParcial1 != null ? ev.notaParcial1 : "-",
+        ev.notaParcial2 != null ? ev.notaParcial2 : "-",
+        ev.notaFinal || "-"
+      ]);
+
+      doc.autoTable({
+        startY: y,
+        head, body,
+        theme: "grid",
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: "#1976d2", textColor: "#fff" },
+        margin: { left: m, right: m },
+        columnStyles: {
+          0: { cellWidth: 60 }, 1: { cellWidth: 25 },
+          2: { cellWidth: 100 }, 3: { cellWidth: 80 },
+          4: { cellWidth: 50 }, 5: { cellWidth: 40 },
+          6: { cellWidth: 60 }, 7: { cellWidth: 25 },
+          8: { cellWidth: 25 }, 9: { cellWidth: 30 }
+        },
+        didDrawPage: data => { y = data.cursor.y + 12; }
+      });
+    }
+
+    // — Gráfico compacto al final —
+    const chartCan = document.getElementById("dashboardChart");
+    const chartImg = chartCan.toDataURL("image/png");
+    const cw = 200;
+    const ch = (chartCan.height / chartCan.width) * cw;
+    const x = (width - cw) / 2;
+    if (y + ch > height - m) { doc.addPage(); y = m; }
+    doc.addImage(chartImg, "PNG", x, y, cw, ch);
+
+    // — Guardar PDF —
+    doc.save("reporte-materias.pdf");
+  });
 
 
 
@@ -258,9 +258,9 @@ btnImprimir.addEventListener("click", async () => {
 
 
 
-//Calcular nota final
+  //Calcular nota final
 
- function calcularNotaFinal() {
+  function calcularNotaFinal() {
     // Obtener valores como números válidos
     const np1 = Number(notaParcial1.value.trim()) || 0;
     const np2 = Number(notaParcial2.value.trim()) || 0;
@@ -288,10 +288,10 @@ function renderChart({ materiasAprobadas, materiasPendientes }) {
   new Chart(document.getElementById('dashboardChart'), {
     type: 'doughnut',
     data: {
-      labels: ['Aprobadas','Pendientes'],
+      labels: ['Aprobadas', 'Pendientes'],
       datasets: [{
         data: [materiasAprobadas, materiasPendientes],
-        backgroundColor: ['#4caf50','#f44336']
+        backgroundColor: ['#4caf50', '#f44336']
       }]
     }
   });
@@ -304,14 +304,14 @@ let dashboardChart;
 // 2) Función que pide stats y refresca DOM + gráfico
 async function loadStats() {
   try {
-    const res   = await fetch("/db/estadisticas", { headers: authHeaders() });
+    const res = await fetch("/db/estadisticas", { headers: authHeaders() });
     const stats = await res.json();
 
     // Pinto los números
-    document.getElementById("totalMaterias").textContent      = stats.totalMaterias;
-    document.getElementById("materiasAprobadas").textContent  = stats.materiasAprobadas;
+    document.getElementById("totalMaterias").textContent = stats.totalMaterias;
+    document.getElementById("materiasAprobadas").textContent = stats.materiasAprobadas;
     document.getElementById("materiasPendientes").textContent = stats.materiasPendientes;
-    document.getElementById("promedioGeneral").textContent    = stats.promedioGeneral;
+    document.getElementById("promedioGeneral").textContent = stats.promedioGeneral;
 
     // Si no existe el chart, lo creo
     if (!dashboardChart) {
@@ -359,7 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 5) Y tras cada guardado de materia
   const origSave = saveMateria;
-  saveMateria = async function() {
+  saveMateria = async function () {
     await origSave();   // ejecuta tu lógica de guardar
     loadStats();        // luego refresca el dashboard
   };
@@ -368,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 function login() {
-  const nombre   = document.getElementById("username").value;
+  const nombre = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
   fetch("/login", {
@@ -378,14 +378,14 @@ function login() {
   })
     .then(res => res.json())
     .then(data => {
-if (data.error) {
-  Swal.fire({
-    icon: 'error',
-    title: 'Login fallido',
-    text: data.error
-  });
-  return;
-}
+      if (data.error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Login fallido',
+          text: data.error
+        });
+        return;
+      }
 
       // 1) Guardar token + user
       localStorage.setItem("token", data.token);
@@ -409,8 +409,8 @@ if (data.error) {
         backgroundColor: "#b78ef1",
         close: true,
       }).showToast();
-// 3) si es alumno: recargo la misma página
-  location.reload();
+      // 3) si es alumno: recargo la misma página
+      location.reload();
 
 
       const loginModal = document.getElementById("login-modal");
@@ -444,7 +444,7 @@ function populateMateriasSelect() {
       data.forEach(materia => {
         const option = document.createElement("option");
         option.value = materia.idMateria;
-        option.text  = materia.NombreMateria;
+        option.text = materia.NombreMateria;
         select.appendChild(option);
       });
 
@@ -703,7 +703,7 @@ function getMateriaFromForm() {
   const correlativa = correlativasInput ? correlativasInput.value : "";
   const selectModalidad = document.getElementById("idModalidad");
   const idModalidad = selectModalidad ? parseInt(selectModalidad.value) : null;
-  
+
   const eventosDinamicos = [];
   document.querySelectorAll(".evento").forEach(eventoDiv => {
     const tipo = eventoDiv.querySelector(".tipo") ? eventoDiv.querySelector(".tipo").value : "";
@@ -715,29 +715,29 @@ function getMateriaFromForm() {
     const dia = eventoDiv.querySelector(".dia") ? eventoDiv.querySelector(".dia").value : "";
     const horaInicio_evento = eventoDiv.querySelector(".horaInicio") ? eventoDiv.querySelector(".horaInicio").value : globalHoraInicio;
     const horaFin_evento = eventoDiv.querySelector(".horaFin") ? eventoDiv.querySelector(".horaFin").value : globalHoraFin;
-    
-    eventosDinamicos.push({ 
-      tipo, 
-      numero, 
-      temasAEstudiar, 
-      estado, 
-      fechaEntrega, 
-      anioDeCarrera, 
-      anio, 
-      horaInicio: horaInicio_evento, 
-      horaFin: horaFin_evento, 
-      idModalidad, 
-      correlativas: correlativa, 
-      fechaExamen: examen, 
-      notaParcial1, 
-      notaParcial2, 
+
+    eventosDinamicos.push({
+      tipo,
+      numero,
+      temasAEstudiar,
+      estado,
+      fechaEntrega,
+      anioDeCarrera,
+      anio,
+      horaInicio: horaInicio_evento,
+      horaFin: horaFin_evento,
+      idModalidad,
+      correlativas: correlativa,
+      fechaExamen: examen,
+      notaParcial1,
+      notaParcial2,
       notaFinal,
       dia
     });
   });
-  
+
   console.log("Eventos dinámicos:", eventosDinamicos);
-  
+
   const eventos = eventosDinamicos.length > 0 ? eventosDinamicos : [{
     tipo: "",
     numero: 0,
@@ -756,7 +756,7 @@ function getMateriaFromForm() {
     notaFinal,
     dia: ""
   }];
-  
+
   return {
     NombreMateria,
     idMateria,
@@ -808,9 +808,9 @@ function saveMateria() {
 
   // 2) Si pase la validación, armo el payload
   const materiaData = getMateriaFromForm();
-  const url    = editingInscripcionId
-               ? `/db/materia/${editingInscripcionId}`
-               : "/db/materia";
+  const url = editingInscripcionId
+    ? `/db/materia/${editingInscripcionId}`
+    : "/db/materia";
   const method = editingInscripcionId ? "PUT" : "POST";
 
   // 3) Ejecuto el fetch
@@ -954,12 +954,12 @@ function closeDetailsModal() {
 function showInfo() {
   Swal.fire({
     html: '<b>Alumnos:</b><br>' +
-          'Barbara Carrizo<br>' +
-          'Omar Brondo<br>' +
-          'Karen Micaela Pelozo<br>' +
-          'Pamela Chaparro<br>' +
-          'Clara Cantarino<br><br>' +
-          '<p><a href="https://onedrive.live.com/..." target="_blank" style="color:#3085d6;">Ver documentación</a></p>',
+      'Barbara Carrizo<br>' +
+      'Omar Brondo<br>' +
+      'Karen Micaela Pelozo<br>' +
+      'Pamela Chaparro<br>' +
+      'Clara Cantarino<br><br>' +
+      '<p><a href="https://onedrive.live.com/..." target="_blank" style="color:#3085d6;">Ver documentación</a></p>',
     confirmButtonText: 'Aceptar'
   });
 }
@@ -991,7 +991,7 @@ function guardarUsuario() {
 
   fetch("/db/usuarios", {
     method: "POST",
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
       headers: authHeaders()  // Para pasar el middleware de admin en pruebas
     },
@@ -1013,9 +1013,9 @@ function guardarUsuario() {
 
 function cargarUsuarios() {
   const tbody = document.getElementById("usuariosTable").querySelector("tbody");
-  fetch("/db/usuarios", { 
-      headers: { headers: authHeaders() }
-    })
+  fetch("/db/usuarios", {
+    headers: { headers: authHeaders() }
+  })
     .then(res => res.json())
     .then(data => {
       if (Array.isArray(data)) {
@@ -1121,8 +1121,8 @@ async function obtenerProximosEventos() {
 function mostrarEventosEnNotificacionesEnPopup(eventos) {
   // Abre una “ventana” de 500×600
   const popup = window.open(
-    "", 
-    "Eventos Próximos", 
+    "",
+    "Eventos Próximos",
     "width=500,height=600,top=100,left=100"
   );
   if (!popup) return alert("Permite los pop-ups para esta web");

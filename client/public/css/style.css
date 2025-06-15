@@ -11,12 +11,78 @@ html, body {
   width: 100%;
 }
 
-#details-modal-content {
-  max-height: 80vh;
-  overflow-y: auto;
-  padding: 1rem;
+/* detalles de la materia */
+
+#details-modal {
+  display: none;
+  position: fixed;
+  z-index: 1002;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  align-items: center;
+  justify-content: center;
 }
 
+#details-modal-content {
+  background: #ffffff;
+  padding: 25px 30px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 80vh;    /* <-- Agregar */
+  overflow-y: auto;    /* <-- Agregar */
+  border-radius: 12px;
+  border: 3px solid #b78ef1;
+  box-shadow: none;
+  position: relative;
+  font-family: 'Roboto', Arial, sans-serif;
+  color: #333;
+}
+
+#details-modal-content h2 {
+  text-align: center;
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #b78ef1;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+#details-content p {
+  margin: 12px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  border-left: 5px solid #dac7f8;
+  padding-left: 12px;
+  background: #f9f6ff;
+  border-radius: 6px;
+}
+
+#details-modal-content .close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #dac7f8;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+/*********/
 
 #login-modal {
   position: fixed;
@@ -91,17 +157,34 @@ body {
 }
 
 .header-container {
-  position: relative;
+  position: relative;        /* para que el absoluto de <h1> se refiera a aquí */
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 15px 50px; /* espacio lateral para #btnInfo */
+  align-items: center;       /* centra verticalmente */
+  padding: 15px 50px;
   background: linear-gradient(90deg, #b78ef1, #ffaa00);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  box-sizing: border-box;
 }
 
+/* título centrado siempre, independientemente del ancho de .actions */
+.header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: "Pacifico", cursive;
+  font-size: 28px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* botones a la derecha */
+.actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+/*
 #btnInfo {
   position: absolute;
   right: 15px;
@@ -116,21 +199,23 @@ body {
 .header-container .logo {
   max-width: 50px;
   margin-right: 10px;
-}
+}*/
 
+/* agenda materias */
 .header-container h1 {
   font-family: "Pacifico", cursive;
-  font-size: 24px;
+  font-size: 28px;
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin: 0;
 }
 
+/* boton info
 .header-container .btnInfo{
   margin-left: 90%;
   cursor: pointer;
-}
+} 
 
 .icon-wrapper {
   display: flex;
@@ -142,8 +227,9 @@ body {
   width: 98px;
   height: 98px;
   margin-left: 50px;
-}
+}*/
 
+/* boton nueva inscripcion */
 .button-wrapper {
   display: flex;
   justify-content: flex-end;
@@ -166,11 +252,11 @@ body {
 }
 
 
-
+/* tabla materias */
 table {
   width: 90%;
   margin: 20px auto;
-  background: #fff;
+  background: #ffffff;
   border-collapse: collapse;
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -197,6 +283,7 @@ td {
   word-break: break-word;
 }
 
+/* botones iconos */
 button {
   padding: 8px 12px;
   font-size: 14px;
@@ -207,37 +294,12 @@ button {
   transition: transform 0.2s ease, background 0.3s ease;
 }
 
-button.detalles {
-  background: #17a2b8;
-  color: #fff;
+#eventos-container button {
+  display: block;
+  margin: 10px auto 0 auto; /* arriba, derecha, abajo, izquierda */
 }
 
-button.detalles:hover {
-  transform: scale(1.05);
-  background: #138496;
-}
-
-button.editar {
-  background: #ffc107;
-  color: #fff;
-}
-
-button.editar:hover {
-  transform: scale(1.05);
-  background: #d39e00;
-}
-
-button.eliminar {
-  background: #dc3545;
-  color: #fff;
-}
-
-button.eliminar:hover {
-  transform: scale(1.05);
-  background: #bd2130;
-}
-
-/* Modal */
+/* Modal  editar inscripcion y nuevo */
 #form-modal {
   display: none;
   position: fixed;
@@ -249,48 +311,110 @@ button.eliminar:hover {
   background: rgba(0, 0, 0, 0.5);
   align-items: center;
   justify-content: center;
+  font-family: 'Roboto', sans-serif;
 }
 
 #form-modal-content {
-  background: #fff;
-  padding: 20px;
+  background: #ffffff;
+  padding: 25px 30px;
   width: 500px;
   max-height: 80vh;
   overflow-y: auto;
-  border-radius: 5px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border: 2px solid #dac7f8;
 }
 
 #form-modal-content h2 {
   margin-top: 0;
   text-align: center;
+  color: #b78ef1;
+  font-size: 22px;
+  text-transform: uppercase;
 }
 
 #form-modal-content label {
   display: block;
   font-weight: bold;
-  margin-top: 10px;
+  margin-top: 12px;
+  color: #333;
 }
 
 #form-modal-content input,
 #form-modal-content select {
   width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  margin-bottom: 15px;
+  padding: 10px;
+  margin-top: 6px;
+  margin-bottom: 16px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 3px;
+  border-radius: 6px;
+  background-color: #f4f4f4;
+  transition: border-color 0.3s ease;
 }
 
+#form-modal-content input:focus,
+#form-modal-content select:focus {
+  border-color: #b78ef1;
+  outline: none;
+}
 
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: center; /* Centrar los botones */
+}
+
+.button-group button {
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-width: 80px;
+}
+
+/* Botón Agregar Evento */
+#btnAgregarEvento {
+  background-color: #b78ef1;
+  color: #fff;
+}
+
+#btnAgregarEvento:hover {
+  background-color: #dac7f8;
+}
+
+/* Botón Guardar */
+#btnGuardar {
+  background-color: #b78ef1;
+  color: #fff;
+}
+
+#btnGuardar:hover {
+  background-color: #dac7f8;
+}
+
+/* Botón Cancelar */
+#btnCancelar {
+  background-color: #b78ef1;
+  color: #fff;
+}
+
+#btnCancelar:hover {
+  background-color: #c82333;
+}
+
+/* footer */
 footer {
   text-align: center;
   padding: 20px;
   background: #b7bfc700;
   color: #fff;
   width: 100%;
-  margin-top: auto; /* Empuja el footer al fondo */
+  margin-top: auto;
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
 }
 
@@ -311,85 +435,41 @@ footer p {
   color: #0a0101;
 }
 
-#details-modal {
-  display: none;
-  position: fixed;
-  z-index: 1002;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  align-items: center;
-  justify-content: center;
-}
-
-#details-modal-content {
-  background: #fff;
-  padding: 20px;
-  width: 70%;
-  max-width: 600px;
-  border-radius: 5px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  position: relative;
-}
-
-#details-modal-content h2 {
-  text-align: center;
-}
-
-#details-modal-content .close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #dc3545;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#details-modal-content .close:hover {
-  background: #c82333;
-}
-
-#details-content p {
-  margin: 10px 0;
-  line-height: 1.5;
-}
-
+/*boton cerrar sesion*/
 #btnCerrarSesion {
-  background-color: #e74c3c; /* Rojo vibrante */
-  color: #fff; /* Texto blanco */
+  background-color: #b78ef1;
+  color: #fff;
   padding: 10px 20px;
   font-size: 1rem;
   border: none;
-  border-radius: 5px; /* Bordes redondeados */
+  border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #btnCerrarSesion:hover {
-  background-color: #c0392b; /* Tono más oscuro al pasar el mouse */
+  background-color: #dac7f8;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 #btnCerrarSesion:active {
-  transform: scale(0.98); /* Efecto de "presionar" */
+  transform: scale(0.98);
 }
+
+/* ******************** */
+
+/* notificaciones */
+
 .modal {
-  display: none;            
-  position: fixed;          
+  display: none;
+  position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.6);
-  justify-content: center;  
+  justify-content: center;
   align-items: center;
 }
 .modal-content {
-  background: #fff;
+  background: #ffffff;
   padding: 1.5em;
   border-radius: 6px;
   width: 90%;
@@ -403,7 +483,10 @@ footer p {
 #notifList { list-style: none; padding: 0; }
 #notifList li { margin-bottom: .7em; }
 
- /* contenedor centrado */
+
+/* Tarjetas info dashboard*/
+
+ /* contenedor tarjetas centrado*/ 
   #statsContainer {
     text-align: center;
     margin: 2em auto;
@@ -413,15 +496,15 @@ footer p {
   #statsCards {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 1.5em;
+    margin-bottom: 1em;
   }
   #statsCards div {
-    background: #f5f5f5;
+    background: #ffffff;
     padding: 1em;
     border-radius: 8px;
     width: 120px;
   }
-  /* ajustamos el tamaño del canvas */
+  /* tamaño del dashboard */
   #dashboardChart {
     max-width: 300px;
     max-height: 300px;

@@ -19,7 +19,7 @@
     <form id="login-form" onsubmit="login(); return false;">
       <div id="login-modal-content">
         <!-- Título general -->
-        <h1 class="pacifico-regular" style="margin-bottom: 5px; font-size: 31px;">Agenda de Materias</h1>
+        <h1 class="pacifico-regular" style="margin-bottom: 5px; font-size: 35px;">Agenda de Materias</h1>
 
         <!-- Subtítulo de login -->
         <h2 style="margin-top: 0;">Inicio de sesión</h2>
@@ -31,13 +31,25 @@
     </form>
   </div>
 
-  <!-- Encabezado -->
-  <div class="header-container">
-    <h1>Agenda de Materias</h1>
-    <button id="btnCerrarSesion" onclick="logout()">Cerrar sesión</button>
-<button id="btnImprimir">🖨️ Imprimir Reporte</button>
-<button id="btnNotifications">Notificaciones</button>
-<div id="notificationsList" style="display:none;"></div>
+<!-- Encabezado -->
+<div class="header-container">
+  <!-- Título siempre centrado -->
+  <h1 class="header-title">Agenda de Materias</h1>
+
+  <!-- Bloque de botones a la derecha -->
+  <div class="actions">
+    <button id="btnImprimir" class="btn btn-primary">
+      <i class="bi bi-download"></i>
+    </button>
+    <button id="btnNotifications" class="btn btn-secondary">
+      <i class="bi bi-bell-fill"></i>
+    </button>
+    <button id="btnCerrarSesion" class="btn btn-danger" onclick="logout()">
+      <i class="bi bi-box-arrow-right"></i> Salir
+    </button>
+  </div>
+</div>
+
 
 <div id="modalNotificaciones" class="modal">
   <div class="modal-content">
@@ -47,15 +59,11 @@
   </div>
 </div>
 
-
-    <span id="btnInfo" onclick="showInfo()" title="Acerca de mí">
-      <i class="bi bi-info-circle-fill"></i>
-    </span>
   </div>
 
-  <img src="img/leyendo.png" alt="Logo" class="icon-left">
+  <!--img src="img/leyendo.png" alt="Logo" class="icon-left"-->
 
-  <!-- Tabla de materias -->
+  <!-- Tabla de materias nueva inscripcion -->
   <table id="materiasTable">
     <thead>
       <tr>
@@ -142,9 +150,10 @@
       <div id="eventos-container">
         <h3>Eventos</h3>
       </div>
-      <button id="btnAgregarEvento" type="button">Agregar Evento</button>
+      
       
       <div class="button-group">
+        <button id="btnAgregarEvento" type="button">Agregar Evento</button>
         <button id="btnGuardar">Guardar</button>
         <button id="btnCancelar">Cancelar</button>
       </div>
@@ -190,5 +199,8 @@
          alt="UNPAZ Logo">
   </div>
   <p>Trabajo de Campo 2025</p>
+      <!--span id="btnInfo" onclick="showInfo()" title="Acerca de mí">
+      <i class="bi bi-info-circle-fill"></i>
+    </span> -->
 </footer>
 </html>
