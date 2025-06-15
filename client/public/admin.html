@@ -53,11 +53,11 @@
     </section>
 
     <!-- Sección Materias -->
-    <section class="admin-section" id="materias-admin">
-      <h2>Materias Globales</h2>
+<section class="admin-section" id="materias-admin">
+  <h2>Materias Globales</h2>
 
-      <!-- Alta de Materia -->
-      <form id="formMateria" onsubmit="guardarMateria(); return false;">
+  <form id="formMateria" onsubmit="guardarMateria(); return false;">
+    <!-- … -->
         <label>Nombre de Materia:</label>
         <input type="text" id="nombreMateria" required placeholder="Ingrese nombre">
         <button type="submit" class="btn btn-primary">
@@ -69,14 +69,33 @@
       </form>
 
       <!-- Listado de Materias -->
-      <table id="tablaMaterias">
-        <thead>
-          <tr><th>ID</th><th>Nombre</th><th>Estado</th><th>Acciones</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+   <table id="tablaMaterias">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Estado</th>
+        <th>Correlativas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
+    </section>
+<div id="modalCorrelativas" class="modal">
+  <span class="close" onclick="cerrarModalCorrelativas()">&times;</span>
+  <h2>Correlativas de <span id="corrMateriaName"></span></h2>
+  <select id="selCorrelativas" multiple size="8" style="width:100%;"></select>
+  <div class="modal-actions">
+    <button class="btn btn-primary" onclick="guardarCorrelativas()">
+      <i class="bi bi-save"></i> Guardar
+    </button>
+    <button class="btn btn-secondary" onclick="cerrarModalCorrelativas()">
+      <i class="bi bi-x-circle"></i> Cancelar
+    </button>
+  </div>
+</div>
   </div>
 
   <!-- Modal edición usuario (sin cambios) -->
@@ -110,6 +129,21 @@
     </div>
   </div>
   </div>
+  <!-- Modal Editar Correlativas -->
+<div id="modalCorrelativas" class="modal">
+  <span class="close" onclick="cerrarModalCorrelativas()">&times;</span>
+  <h2>Correlativas de <span id="correlativasMateriaName"></span></h2>
+  <select id="selCorrelativas" multiple size="8" style="width:100%;"></select>
+  <div class="modal-actions">
+    <button class="btn btn-primary" onclick="guardarCorrelativas()">
+      <i class="bi bi-save"></i> Guardar
+    </button>
+    <button class="btn btn-secondary" onclick="cerrarModalCorrelativas()">
+      <i class="bi bi-x-circle"></i> Cancelar
+    </button>
+  </div>
+</div>
+
    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="js/scriptAdmin.js"></script>
 </body>

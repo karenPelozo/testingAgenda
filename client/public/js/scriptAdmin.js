@@ -198,21 +198,39 @@ function cerrarModalEditarUsuario() {
 // 4.1 Listar materias
 function cargarMateriasAdmin() {
   const tbody = document.querySelector("#tablaMaterias tbody");
-  fetch("/db/materias/global?includeAll=true", { headers: authHeaders() })
-    .then(res => res.json())
+  fetch("/db/materias/global/correlativas?includeAll=true", {
+    headers: authHeaders()
+  })
+    .then(r => {
+      if (!r.ok) throw new Error("No autorizado");
+      return r.json();
+    })
     .then(data => {
       tbody.innerHTML = "";
       data.forEach(m => {
+        const correlTxt = (m.correlativas || [])
+          .map(c => c.NombreMateria)
+          .join(", ") || "-";
+
+        const btnClase = m.estado === "Vigente" ? "btn-warning" : "btn-success";
+        const icono    = m.estado === "Vigente" ? "bi-toggle-off" : "bi-toggle-on";
+        const textoAcc = m.estado === "Vigente" ? "Dar baja" : "Reactivar";
+
         const tr = document.createElement("tr");
+        tr.dataset.id = m.idMateria;
         tr.innerHTML = `
           <td>${m.idMateria}</td>
           <td>${m.NombreMateria}</td>
           <td>${m.estado}</td>
+          <td class="cell-correlativas">${correlTxt}</td>
           <td>
-            <button id="switch" onclick="toggleEstadoMateria(${m.idMateria}, '${m.estado}')"
-                    class="btn btn-sm ${m.estado==='Vigente'?'btn-warning':'btn-success'}">
-              <i class="bi ${m.estado==='Vigente'?'bi-toggle-off':'bi-toggle-on'}"></i>
-              ${m.estado==='Vigente'?'Dar baja':'Reactivar'}
+            <button class="btn btn-sm btn-info"
+                    onclick="editarCorrelativas(${m.idMateria}, '${m.NombreMateria}')">
+              <i class="bi bi-list"></i> Correlativas
+            </button>
+            <button class="btn btn-sm ${btnClase}"
+                    onclick="toggleEstadoMateria(${m.idMateria}, '${m.estado}')">
+              <i class="bi ${icono}"></i> ${textoAcc}
             </button>
           </td>`;
         tbody.appendChild(tr);
@@ -221,22 +239,6 @@ function cargarMateriasAdmin() {
     .catch(err => alert("Error al cargar materias: " + err.message));
 }
 
-// 4.2 Crear materia
-function guardarMateria() {
-  const nombre = document.getElementById("nombreMateria").value.trim();
-  if (!nombre) return alert("Ingrese nombre de materia");
-  fetch("/db/materia/global", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({ NombreMateria: nombre })
-  })
-    .then(res => res.json())
-    .then(() => {
-      document.getElementById("formMateria").reset();
-      cargarMateriasAdmin();
-    })
-    .catch(err => alert("Error al crear materia: " + err.message));
-}
 
 // 4.3 Cambiar estado
 function toggleEstadoMateria(id, actual) {
@@ -250,6 +252,97 @@ function toggleEstadoMateria(id, actual) {
     .then(() => cargarMateriasAdmin())
     .catch(err => alert("Error al cambiar estado: " + err.message));
 }
+
+/// 5.1 Abrir modal y poblar <select> de correlativas
+async function editarCorrelativas(id, nombre) {
+  // Actualizar título
+  document.getElementById("corrMateriaName").textContent = nombre;
+  // Guardar id en el modal
+  const modal = document.getElementById("modalCorrelativas");
+  modal.dataset.id = id;
+
+  // 1) Traer todas las materias
+  const all = await fetch("/db/materias/global?includeAll=true", {
+    headers: authHeaders()
+  }).then(r => r.json());
+
+  // 2) Limpiar y llenar el <select>
+  const sel = document.getElementById("selCorrelativas");
+  sel.innerHTML = "";                     // borra opciones previas
+  all
+    .filter(m => m.idMateria !== id)      // no incluir la propia materia
+    .forEach(m => {
+      const opt = new Option(m.NombreMateria, m.idMateria);
+      sel.add(opt);
+    });
+
+  // 3) Iniciar toggle sin Ctrl (una sola vez)
+  if (!sel._toggleInited) {
+    sel.addEventListener("mousedown", e => {
+      if (e.target.tagName === "OPTION") {
+        e.preventDefault();              // evita selección nativa
+        e.target.selected = !e.target.selected;  // toggle
+      }
+    });
+    sel._toggleInited = true;
+  }
+
+  // 4) Marcar las correlativas actuales
+  const actuales = (all.find(m => m.idMateria === id) || {}).correlativas || [];
+  Array.from(sel.options).forEach(o => {
+    if (actuales.some(c => c.idMateria === +o.value)) {
+      o.selected = true;
+    }
+  });
+
+  // 5) Mostrar modal
+  const backdrop = document.getElementById("modalBackdrop");
+  backdrop.style.display = modal.style.display = "block";
+  setTimeout(() => {
+    backdrop.classList.add("active");
+    modal.classList.add("active");
+  }, 10);
+}
+
+// 5.2 Cerrar modal de correlativas
+function cerrarModalCorrelativas() {
+  const modal    = document.getElementById("modalCorrelativas");
+  const backdrop = document.getElementById("modalBackdrop");
+  modal.classList.remove("active");
+  backdrop.classList.remove("active");
+  setTimeout(() => {
+    modal.style.display = backdrop.style.display = "none";
+  }, 300);
+}
+
+// 5.3 Guardar correlativas seleccionadas
+async function guardarCorrelativas() {
+  const modal = document.getElementById("modalCorrelativas");
+  const id    = modal.dataset.id;
+  const sel   = document.getElementById("selCorrelativas");
+  const ids   = Array.from(sel.selectedOptions).map(o => +o.value);
+
+  try {
+    const res = await fetch(
+      `/db/materia/global/${id}/correlativas`,
+      {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ correlativas: ids })
+      }
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Error al guardar correlativas");
+    }
+    cerrarModalCorrelativas();
+    cargarMateriasAdmin();
+  } catch (e) {
+    alert("No se pudieron guardar las correlativas:\n" + e.message);
+  }
+}
+
+
 
 // ——— 5 · Logout ———
 function logout() {

@@ -14,6 +14,8 @@ const SECRET = process.env.JWT_SECRET || "clavesecreta";
 const verifyAdmin = require('./client/src/server/middleware/verifyAdmin');
 const notificacionesRoute = require('./client/src/server/routes/notificaciones.route.js')
 const authenticateToken = require("./client/src/server/middleware/auth");
+const MateriaCorrelativa = require('./client/models/MateriaCorrelativa');
+
 
 
 const app = express();
@@ -301,6 +303,70 @@ app.get("/db/materias/global", async (req, res) => {
     res.json(materias);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+
+// GET exclusivo para el Admin:
+// /db/materias/global/correlativas?includeAll=true
+app.get(
+  "/db/materias/global/correlativas",
+  authenticateToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const includeAll   = req.query.includeAll === "true";
+      const where        = includeAll ? {} : { estado: "Vigente" };
+
+      const materias = await Materia.findAll({
+        where,
+        include: [
+          {
+            model: Materia,
+            as: "correlativas",
+            through: { attributes: [] },
+          },
+        ],
+      });
+
+      res.json(materias);
+    } catch (error) {
+      console.error("Error al listar materias con correlativas:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// PATCH para actualizar correlativas de una materia global
+app.patch(
+  "/db/materia/global/:id/correlativas",
+  authenticateToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const idMateria = +req.params.id;
+      const nuevas    = Array.isArray(req.body.correlativas)
+                        ? req.body.correlativas.map(x => +x)
+                        : [];
+
+      // 1) Borro viejas correlativas
+      await MateriaCorrelativa.destroy({ where: { idMateria } });
+      // 2) Inserto las nuevas
+      if (nuevas.length) {
+        const rows = nuevas.map(idCor => ({ idMateria, idCorrelativa: idCor }));
+        await MateriaCorrelativa.bulkCreate(rows);
+      }
+
+      // 3) Devuelvo el listado actualizado (opcional)
+      const mat = await Materia.findByPk(idMateria, {
+        include: [{ model: Materia, as: "correlativas", through: { attributes: [] } }]
+      });
+      res.json({ message: "Correlativas OK", correlativas: mat.correlativas });
+    } catch (err) {
+      console.error("PATCH correlativas:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 
 app.patch("/db/materia/global/:id/estado", authenticateToken,verifyAdmin, async (req, res) => {
   try {
