@@ -872,3 +872,48 @@ table td {
 #tablaUsuarios .btn-detalles:hover {
   background: #138496;
 }
+/* Botón de cambio de estado */
+#switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Botón cuando la materia está vigente */
+.btn-warning {
+  background: #ffc107;
+  color: #fff;
+}
+.btn-warning:hover {
+  background: #d39e00;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-warning:active {
+  transform: scale(0.98);
+}
+
+/* Botón cuando la materia está en baja */
+.btn-success {
+  background: #28a745;
+  color: #fff;
+}
+.btn-success:hover {
+  background: #218838;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-success:active {
+  transform: scale(0.98);
+}
+
+/* Ícono dentro del botón */
+#switch i {
+  font-size: 16px;
+}

@@ -209,7 +209,7 @@ function cargarMateriasAdmin() {
           <td>${m.NombreMateria}</td>
           <td>${m.estado}</td>
           <td>
-            <button onclick="toggleEstadoMateria(${m.idMateria}, '${m.estado}')"
+            <button id="switch" onclick="toggleEstadoMateria(${m.idMateria}, '${m.estado}')"
                     class="btn btn-sm ${m.estado==='Vigente'?'btn-warning':'btn-success'}">
               <i class="bi ${m.estado==='Vigente'?'bi-toggle-off':'bi-toggle-on'}"></i>
               ${m.estado==='Vigente'?'Dar baja':'Reactivar'}
