@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const SECRET = process.env.JWT_SECRET || "clavesecreta";
 const controllersUser = {}
+
 const login= async(req , res)=>{
     const user = req.user;
     const { nombre, password } = req.body;
@@ -48,6 +49,7 @@ const createUsuarioAD = async (req, res) => {
     const newUser = await createUser(req.body);
     res.status(201).json({ message: "Usuario creado", user: newUser });
   } catch (error) {
+    console.error('el error es',error)
     res.status(400).json({ error: error.message });
   }
 }
@@ -55,12 +57,17 @@ controllersUser.createUsuarioAD = createUsuarioAD;
 const eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
+     const userId = parseInt(id, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "ID de usuario debe ser un número." });
+    }
     const rowsDeleted = await User.destroy({ where: { id } });
     if (rowsDeleted === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
     res.json({ message: "Usuario eliminado correctamente" });
   } catch (error) {
+    console.error("Error eliminando usuario:", error);
     res.status(500).json({ error: error.message });
   }
 }

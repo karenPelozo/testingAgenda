@@ -25,26 +25,24 @@ route.get('/db/usuarios',
 route.get('/db/usuarios/:id',
     authenticateToken,
     verifyAD,
-    middleUsuario.existeUserIdAD,
     controllerUser.usuarioPorID
     )
 route.post('/db/usuarios',
     authenticateToken,
     verifyAD,
     middleUsuario.schemaRegistroValido, // <---- verifica que los campos esten correctamemte ingresados
-    middleUsuario.verificarExistencia(false), //<--- verifica que el usuario no exista 
+    middleUsuario.verificaUsuario({ debeExistir: false }), //<--- verifica que el usuario no exista 
     controllerUser.createUsuarioAD
     )
 route.delete('/db/usuarios/:id',
     authenticateToken,
     verifyAD,
-    middleUsuario.existeUserIdAD,
     controllerUser.eliminarUsuario
     )
 route.put('/db/usuarios/:id',
     authenticateToken,
     verifyAD,
-    middleUsuario.existeUserIdAD,
+    middleUsuario.verificaUsuario({ debeExistir: true }),
     controllerUser.actualizacionUsuarioDatos
     )
 module.exports = route;

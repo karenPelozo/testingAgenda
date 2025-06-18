@@ -6,7 +6,10 @@ const Evento = require("./Evento");
 const MateriaCorrelativa = require("./MateriaCorrelativa");
 
 // Relación: Un usuario tiene muchas inscripciones
-User.hasMany(MateriaUsuario, { foreignKey: "idUsuario", as: "materiasInscritas" });
+User.hasMany(MateriaUsuario, { foreignKey: "idUsuario",
+   as: "materiasInscritas" ,
+//   onDelete: "CASCADE",  hooks: true 
+});
 MateriaUsuario.belongsTo(User, { foreignKey: "idUsuario", as: "usuario" });
 
 // Relación: Una materia tiene muchas inscripciones

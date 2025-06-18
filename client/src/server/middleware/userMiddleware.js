@@ -94,23 +94,64 @@ const { nombre, password } = req.body;
       return res.status(401).json({ error: "Contraseña incorrecta" });
         }
 }*/
-const existeUserIdAD= async(req, res, next)=>{
+/*const existeUserIdAD= async(req, res, next)=>{
    try {
       const { id } = req.params;
-        const usuario = await User.findByPk(id);
+        const user = await User.findByPk(id);
       if (!usuario) {
         return res.status(404).json({ error: "Usuario no encontrado" });
      }
-     req.user = user
      next();
    } catch (error) {
     res.status(500).json({ message: 'Error interno del servidor al verificar ID de usuario.' });
    }
-}
+}*/
+
+const verificaUsuario = ({ debeExistir = true } = {}) => {
+  return async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { nombre } = req.body;
+
+      let usuario;
+
+      // Si viene por ID
+      if (id) {
+        usuario = await User.findByPk(id);
+      }
+
+      // Si viene por nombre (por ejemplo, en POST)
+      if (!id && nombre) {
+        usuario = await User.findOne({ where: { nombre } });
+      }
+
+      // Lógica según lo que esperás
+      if (debeExistir && !usuario) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+
+      if (!debeExistir && usuario) {
+        return res.status(409).json({ error: "Ya existe un usuario con ese nombre" });
+      }
+
+      // Lo guardás por si lo querés usar después
+      req.usuarioEncontrado = usuario || null;
+
+      next();
+    } catch (error) {
+      console.error("Error en middleware verificaUsuario:", error);
+      res.status(500).json({
+        error: "Error interno en la verificación del usuario",
+        detalle: error.message
+      });
+    }
+  };
+};
+
 module.exports = {
     schemaLoginValido,
     schemaRegistroValido,
     verificarExistencia,
     verificarPassword,
-    existeUserIdAD
+    verificaUsuario   
 }

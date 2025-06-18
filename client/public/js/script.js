@@ -1126,7 +1126,7 @@ function eliminarUsuario(id) {
   if (confirm("¿Está seguro de eliminar este usuario?")) {
     fetch(`/db/usuarios/${id}`, {
       method: "DELETE",
-      headers: { headers: authHeaders() }
+      headers: authHeaders() 
     })
       .then(res => res.json())
       .then(data => {
