@@ -596,9 +596,12 @@ function renderMaterias(rows = []) {
   });
 }
 
-function openFormModal() {
+function openFormModal(populate = false) {
+  if(!populate){
   populateMateriasSelect();
   populateModalidadesSelect();
+  
+  }
   const fm = document.getElementById("form-modal");
   if (fm) fm.style.display = "flex";
 }
@@ -624,16 +627,24 @@ function clearForm() {
 function editMateria(id) {
   editingInscripcionId = id;
   document.getElementById("modal-title").innerText = "Editar Inscripción";
+  //PASABA QUE CUANDO CARGABAS ESTO OPENFORMMODAL() BORRABA LOS DATOS QUE YA ESTABAN LE PUESE UNA CONDICION.
+ 
+  openFormModal(true);
+  
   fetch(`/db/materia/${id}`)
     .then(res => res.json())
     .then(inscripcion => {
       const selectMateria = document.getElementById("NombreMateria");
-      if (inscripcion.materia && inscripcion.materia.idMateria) {
+    /*  if (inscripcion.materia && inscripcion.materia.idMateria) {
         Array.from(selectMateria.options).forEach(option => {
           option.selected = (option.value == inscripcion.materia.idMateria);
         });
+      }*/
+      if (inscripcion.materia && inscripcion.materia.idMateria) {
+        selectMateria.value = inscripcion.materia.idMateria;
       }
       populateCorrelativas(inscripcion.materia.idMateria);
+
       if (inscripcion.eventos && inscripcion.eventos.length > 0) {
         const ev = inscripcion.eventos[0];
         document.getElementById("anioDeCarrera").value = ev.anioDeCarrera || "";
@@ -644,6 +655,7 @@ function editMateria(id) {
         document.getElementById("notaParcial1").value = ev.notaParcial1 || "";
         document.getElementById("notaParcial2").value = ev.notaParcial2 || "";
         document.getElementById("notaFinal").value = ev.notaFinal || "";
+       // document.getElementById("idModalidad").value = ev.idModalidad || "";
         document.getElementById("idModalidad").value = ev.idModalidad || "";
       }
       const eventosContainer = document.getElementById("eventos-container");
@@ -691,7 +703,7 @@ function editMateria(id) {
           eventosContainer.appendChild(eventoDiv);
         });
       }
-      openFormModal();
+      
     })
     .catch(err => console.error("Error al recuperar la inscripción:", err));
 }

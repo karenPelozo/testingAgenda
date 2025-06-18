@@ -1,3 +1,4 @@
+const Materia = require('../../../models/Materia')
 const controllerMateria ={}
 const getMaterias =()=>{
     console.log("lista de materias")

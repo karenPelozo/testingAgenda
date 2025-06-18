@@ -15,7 +15,7 @@ const verifyAdmin = require('./client/src/server/middleware/verifyAdmin');
 const notificacionesRoute = require('./client/src/server/routes/notificaciones.route.js')
 const authenticateToken = require("./client/src/server/middleware/auth");
 const MateriaCorrelativa = require('./client/models/MateriaCorrelativa');
-
+const routesUser = require('./client/src/server/routes/usuarioRoutes.js')
 
 
 const app = express();
@@ -29,6 +29,7 @@ const { Materia, Modalidad, MateriaUsuario, Evento } = require('./client/models/
 const estadisticasRoute = require("./client/src/server/routes/estadisticas.route");
 
 app.use(express.json());
+app.use('/', routesUser);
 app.use(cors());
 app.use(express.static(path.join(__dirname, "client", "public")));
 app.use("/notificaciones", authenticateToken, notificacionesRoute);
@@ -64,7 +65,7 @@ app.get("/", (req, res) => {
 });*/
 
 // Login de Usuario
-app.post("/login", async (req, res) => {
+/*app.post("/login", async (req, res) => {
   const { nombre, password } = req.body;
   if (!nombre || !password) {
     return res.status(400).json({ error: "Faltan campos obligatorios" });
@@ -81,13 +82,13 @@ app.post("/login", async (req, res) => {
 
   res.json({ message: "Login exitoso", token, user: payload });
 });
-
+*/
 /*===========================================
   Endpoint para obtener Usuarios (Administración)
 ===========================================*/
 
 // GET para listar todos los usuarios (protegido para administradores)
-app.get("/db/usuarios", authenticateToken,verifyAdmin, async (req, res) => {
+/*app.get("/db/usuarios", authenticateToken,verifyAdmin, async (req, res) => {
   try {
     const usuarios = await User.findAll();
     res.json(usuarios);
@@ -95,7 +96,7 @@ app.get("/db/usuarios", authenticateToken,verifyAdmin, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
+*/
 /*===========================================
   Endpoints para Inscripciones de Materias y Eventos
 ===========================================*/
@@ -197,6 +198,7 @@ app.get("/db/materia/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// este put no trae la materia y permite modificar la materia
 
 app.put("/db/materia/:id", async (req, res) => {
   try {
@@ -207,6 +209,10 @@ app.put("/db/materia/:id", async (req, res) => {
     if (!inscripcion) return res.status(404).json({ error: "Inscripción no encontrada" });
 
     if (idMateria && inscripcion.idMateria !== idMateria) {
+     /* const eventosAsociados = await Evento.count({ where: { idMateriaUsuario: inscripcion.idMateriaUsuario } });
+        if (eventosAsociados > 0) {
+            return res.status(400).json({ error: "No se puede cambiar la materia de esta inscripción porque tiene eventos asociados. Elimine los eventos primero o cree una nueva inscripción." });
+        }*/
       const materia = await Materia.findByPk(idMateria);
       if (!materia) return res.status(400).json({ error: "Materia inválida" });
       inscripcion = await inscripcion.update({ idMateria, idUsuario });
@@ -266,7 +272,7 @@ app.put("/db/materia/:id", async (req, res) => {
         }
       ]
     });
-
+  
     res.json(resultado);
 
   } catch (error) {
@@ -307,8 +313,7 @@ app.get("/db/materias/global", async (req, res) => {
 
 // GET exclusivo para el Admin:
 // /db/materias/global/correlativas?includeAll=true
-app.get(
-  "/db/materias/global/correlativas",
+app.get("/db/materias/global/correlativas",
   authenticateToken,
   verifyAdmin,
   async (req, res) => {
@@ -336,8 +341,7 @@ app.get(
 );
 
 // PATCH para actualizar correlativas de una materia global
-app.patch(
-  "/db/materia/global/:id/correlativas",
+app.patch("/db/materia/global/:id/correlativas",
   authenticateToken,
   verifyAdmin,
   async (req, res) => {
@@ -385,8 +389,7 @@ app.patch("/db/materia/global/:id/estado", authenticateToken,verifyAdmin, async 
 });
 
 // ahora con authenticateToken + verifyAdmin
-app.post(
-  "/db/materia/global",
+app.post("/db/materia/global",
   authenticateToken,
   verifyAdmin,
   async (req, res) => {
@@ -469,7 +472,7 @@ app.get("/db/correlativas/:idMateria", async (req, res) => {
   Función auxiliar para crear usuarios
 ===========================================*/
 
-async function createUser(userData) {
+/*async function createUser(userData) {
   const { nombre, password, rol } = userData;
   
   if (!nombre || !password || !rol) {
@@ -491,12 +494,12 @@ async function createUser(userData) {
   
   return newUser;
 }
-
+*/
 /*===========================================
   Endpoints para Usuarios (Administración)
 ===========================================*/
-
-app.get("/db/usuarios/:id", authenticateToken,verifyAdmin, async (req, res) => {
+//usuarioPorID
+/*app.get("/db/usuarios/:id", authenticateToken,verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const usuario = await User.findByPk(id);
@@ -561,7 +564,7 @@ app.put("/db/usuarios/:id", authenticateToken,verifyAdmin, async (req, res) => {
   }
 });
 
-
+*/
 
 /*===========================================
   Sincronización de la Base de Datos y Arranque del Servidor
